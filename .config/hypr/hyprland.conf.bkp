@@ -1,0 +1,11 @@
+exec-once = waybar & hyprpaper
+bind = SUPER, RETURN, exec, foot
+bind = SUPER SHIFT, Q, killactive
+bind = SUPER, M, exit
+input {
+	kb_layout = us
+}
+#misc {
+#	disable_hyprland_logo = true
+#}
+
