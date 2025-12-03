@@ -23,7 +23,7 @@
 		"default": "" 
 	},
        "persistent-workspaces": {
-         "*": [ 2, 3, 4, 5, 6 ]
+         "*": [ 1, 2, 3, 4, 5, 6 ]
        }
 },
 
@@ -163,8 +163,8 @@
   "format": " {temperatureC}°C",            
   "format-critical": " {temperatureC}°C",
   "interval": 1,
-  "critical-threshold": 80,
-  "on-click": "foot btop",
+  "critical-threshold": 85,
+  "on-click": "kitty btop",
  },
 
 "pulseaudio": {
@@ -182,8 +182,7 @@
     "default": ["🕨","🕩","🕪"]
   },
   "justify": "center",
-  "on-click": "amixer sset Master toggle",
-  "on-click-right": "pavucontrol",
+  "on-click": "pavucontrol",
   "tooltip-format": "{icon}  {volume}%"
 },
 

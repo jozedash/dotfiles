@@ -76,8 +76,8 @@
     "format": " {temperatureC}°C",
     "format-critical": " {temperatureC}°C",
     "interval": 1,
-    "critical-threshold": 80,
-    "on-click": "foot btop",
+    "critical-threshold": 90,
+    "on-click": "kitty btop",
   },
   "custom/powerDraw": {
     "format": "{}",
