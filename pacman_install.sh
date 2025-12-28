@@ -1,6 +1,13 @@
 #!/bin/bash
-#/dolphin/pcmanfm =====PICK ONE
-set -x
+# set -x
+
+# Run with `sudo ./pacman_install.sh $(whoami)`
+if [ -z $1 ]; then
+	echo "No user provided!"
+	exit 1
+else
+	echo "Username $1"
+fi
 
 # Update all
 pacman -Syu
@@ -36,19 +43,24 @@ for FONT in ${FONTS[@]}; do
 done
 
 
-# TODO - copy files to correct locations
+# Config file permissions
+chmod 755 ./config/hypr/toggle_layout.sh
 
-# TODO - config file permissions
+# Copy files to correct locations
+cp -r ./config /home/$1/.config
+cp -r ./usr /usr
 
 # Do security
 ufw default deny incoming
 ufw default allow outgoing
 ufw enable
 
-nano /etc/ssh/sshd_config #
-PermitRootLogin no
-PasswordAuthentication no
-AllowUsers yourusername
+dt=`date '+%Y-%m-%d_%H:%M:%S'`
+cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bkp_$dt
+
+sed -i 's/^[#[:space:]]*PermitRootLogin[[:space:]]\+.*/PermitRootLogin no/' /etc/ssh/sshd_config
+sed -i 's/^[#[:space:]]*PasswordAuthentication[[:space:]]\+.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+echo AllowUsers $1 >> /etc/ssh/sshd_config
 
 pacman -S rkhunter
 rkhunter --check
