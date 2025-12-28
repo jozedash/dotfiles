@@ -15,7 +15,7 @@ pacman -Syu
 # TODO - mod /etc/pacman.conf for steam
 
 # Install modules
-MODULES=("pipewire-audio" "pipewire-pulse" "wireplumber" "pavucontrol" "thunar" "fastfetch" "gnome-text-editor" "unzip" "hyprshot" "swaync" "hyprlock" "hypridle" "lxappearance" "ufw" "rkhunter" "thunderbird" "polkit" "hyprpolkitagent" "fcitx5-rime" "fcitx5-chinese-addons" "fcitx5-configtool" "btop" "keepassxc")
+MODULES=("pipewire-audio" "pipewire-pulse" "wireplumber" "pavucontrol" "thunar" "fastfetch" "gnome-text-editor" "unzip" "hyprshot" "swaync" "hyprlock" "hypridle" "lxappearance" "ufw" "rkhunter" "thunderbird" "polkit" "hyprpolkitagent" "fcitx5-rime" "fcitx5-chinese-addons" "fcitx5-configtool" "btop" "keepassxc" "libreoffice-still")
 
 MODULE_NO=0
 for MODULE in ${MODULES[@]}; do
