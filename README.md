@@ -30,26 +30,40 @@ New system up and running in an hour
 
 ## Install:
 
-TODO - detailed options
+Boot from your ISO USB, it'll load into a terminal.
+
+Immediately, network needs configuration:
 
 	iwctl
 	station wlan0 connect XXXX
 
-	pacman -Sy archinstall
+Then, move on to running the archinstall script
 
+	pacman -Sy archinstall
 	archinstall
 
-	Normal settings
+The script changes fairly frequently, so work thorugh the options and find the corresponding settings:
 
-	Audio config
-	+pipewire-audio
-	+pipewire-pulse
-
-	Add packages
-	+hyprpaper
-	+waybar
-	+kitty
-	+wofi
+* Set region and locale
+* Set mirrors
+* Disk config
+	* Best effort partition layout
+	* ext4
+* Add root pwd
+* Add user
+* Set profile
+	* Desktop
+	* Hyprland
+		* polkit
+* BT config enabled
+* Audio config
+	* pipewire
+* Copy network config to installation
+* Additional packages (use / to search)
+	* hyprpaper
+	* waybar
+	* kitty
+	* wofi
 
 ## Manual setup:
 * [Steam](https://wiki.archlinux.org/title/Steam)
@@ -112,3 +126,20 @@ TODO - widgets
 	sudo systemctl enable wpa_supplicant
 	sudo systemctl start NetworkManager
 	sudo systemctl start wpa_supplicant
+
+	sudo pacman -S dnsmasq hostapd iptables
+	sudo iw dev wlan0 interface add ap0 type __ap # Add virtual ap interface
+	sudo sysctl net.ipv4.ip_forward=1 # enable port fwd
+	echo "net.ipv4.ip_forward=1" | sudo tee /etc/sysctl.d/30-ipforward.conf # persistent port fwding
+
+	# update iptables
+	sudo iptables -t nat -A POSTROUTING -o wlan0 -j MASQUERADE
+	sudo iptables -A FORWARD -i ap0 -o wlan0 -j ACCEPT
+	sudo iptables -A FORWARD -i wlan0 -o ap0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+	
+	# save rules
+	sudo pacman -S iptables-nft
+	sudo iptables-save | sudo tee /etc/iptables/iptables.rules
+	sudo systemctl enable iptables
+
+	sudo systemctl enable ap0-interface.service

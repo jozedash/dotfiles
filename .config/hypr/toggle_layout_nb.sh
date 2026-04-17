@@ -49,38 +49,42 @@ fi
 
 if [ $STATE -eq $DOCKED ]; then
     # Switch to docked
-    hyprctl keyword monitor "eDP-1,disable"
-    hyprctl keyword monitor "$MONITOR,3840x2160@60,0x0,1"
+    hyprctl keyword monitor "eDP-1,1920x1080@60,1080x1080,1"
+    hyprctl keyword monitor "$MONITOR2,1920x1080@60,1080x0,1"
+    hyprctl keyword monitor "$MONITOR,1920x1080@60,0x0,1,transform,1"
     hyprctl dispatch moveworkspacetomonitor 1 $MONITOR
-    hyprctl dispatch moveworkspacetomonitor 2 $MONITOR
-    hyprctl dispatch moveworkspacetomonitor 3 $MONITOR
+    hyprctl dispatch moveworkspacetomonitor 2 $MONITOR2
+    hyprctl dispatch moveworkspacetomonitor 3 eDP-1
     hyprctl dispatch moveworkspacetomonitor 4 $MONITOR
-    hyprctl dispatch moveworkspacetomonitor 5 $MONITOR
-    hyprctl dispatch moveworkspacetomonitor 6 $MONITOR
+    hyprctl dispatch moveworkspacetomonitor 5 $MONITOR2
+    hyprctl dispatch moveworkspacetomonitor 6 eDP-1
 elif [ $STATE -eq $GAMING ]; then
     # Lower resolution
     hyprctl keyword monitor "eDP-1,disable"
-    hyprctl keyword monitor "$MONITOR,1600x900@60,0x0,1"
-    hyprctl dispatch moveworkspacetomonitor 1 $MONITOR
-    hyprctl dispatch moveworkspacetomonitor 2 $MONITOR
-    hyprctl dispatch moveworkspacetomonitor 3 $MONITOR
-    hyprctl dispatch moveworkspacetomonitor 4 $MONITOR
-    hyprctl dispatch moveworkspacetomonitor 5 $MONITOR
-    hyprctl dispatch moveworkspacetomonitor 6 $MONITOR
+    hyprctl keyword monitor "$MONITOR,disable"
+    hyprctl keyword monitor "$MONITOR2,1600x900@60,0x0,1"
+    hyprctl dispatch moveworkspacetomonitor 1 $MONITOR2
+    hyprctl dispatch moveworkspacetomonitor 2 $MONITOR2
+    hyprctl dispatch moveworkspacetomonitor 3 $MONITOR2
+    hyprctl dispatch moveworkspacetomonitor 4 $MONITOR2
+    hyprctl dispatch moveworkspacetomonitor 5 $MONITOR2
+    hyprctl dispatch moveworkspacetomonitor 6 $MONITOR2
 elif [ $STATE -eq $EXTEND ]; then
     # Extendo
-    hyprctl keyword monitor "eDP-1,1920x1080@60,3840x1080,1"
-    hyprctl keyword monitor "$MONITOR,3840x2160@60,0x0,1"
+    hyprctl keyword monitor "eDP-1,1920x1080@60,3000x520,1"
+    hyprctl keyword monitor "$MONITOR2,1920x1080@60,1080x0,1"
+    hyprctl keyword monitor "$MONITOR,1920x1080@60,0x0,1,transform,1"
     hyprctl dispatch moveworkspacetomonitor 1 $MONITOR
-    hyprctl dispatch moveworkspacetomonitor 2 eDP-1
-    hyprctl dispatch moveworkspacetomonitor 3 $MONITOR
-    hyprctl dispatch moveworkspacetomonitor 4 eDP-1
-    hyprctl dispatch moveworkspacetomonitor 5 $MONITOR
+    hyprctl dispatch moveworkspacetomonitor 2 $MONITOR2
+    hyprctl dispatch moveworkspacetomonitor 3 eDP-1
+    hyprctl dispatch moveworkspacetomonitor 4 $MONITOR
+    hyprctl dispatch moveworkspacetomonitor 5 $MONITOR2
     hyprctl dispatch moveworkspacetomonitor 6 eDP-1
 elif [ $STATE -eq $LAPTOP ]; then
     # Laptop only
     hyprctl keyword monitor "eDP-1,1920x1080@60,0x0,1"
     hyprctl keyword monitor "$MONITOR,disable"
+    hyprctl keyword monitor "$MONITOR2,disable"
     hyprctl dispatch moveworkspacetomonitor 1 eDP-1
     hyprctl dispatch moveworkspacetomonitor 2 eDP-1
     hyprctl dispatch moveworkspacetomonitor 3 eDP-1
