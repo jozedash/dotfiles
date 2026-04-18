@@ -19,6 +19,9 @@ window#waybar {
   border-radius: 15px 0 0 15px;
   margin-top: 2px;
   background: #595959;
+  color: #151515;
+  border: 2px solid #ff00ff;
+  border-right: none;
 }
 
 .modules-center {
@@ -26,12 +29,17 @@ window#waybar {
   margin-top: 2px;
   border-radius: 15px 15px 15px 15px;
   background: #595959;
+  color: #151515;
+  border: 2px solid #ff00ff;
 }
 
 .modules-left {
   border-radius: 0 15px 15px 0;
   margin-top: 2px;
   background: #595959;
+  color: #151515;
+  border: 2px solid #ff00ff;
+  border-left: none;
 }
 
 #battery,
@@ -64,9 +72,6 @@ window#waybar {
   color: #FF0000;
   padding-top: 0;
 }
-
-
-
 
 #clock{
   color: #ff00ff;
