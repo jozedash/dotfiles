@@ -8,7 +8,7 @@
 window#waybar {
   background: transparent;
   margin: 5px;
- }
+}
 
 #custom-logo {
   padding: 0 10px;
@@ -18,9 +18,9 @@ window#waybar {
   padding-left: 5px;
   border-radius: 15px 0 0 15px;
   margin-top: 2px;
-  background: #595959;
-  color: #151515;
-  border: 2px solid #ff00ff;
+  background: rgba(63, 63, 63, 0.7);
+  color: rgb(216, 222, 233);
+  border: 2px solid rgba(255, 0, 255, 1.0);;
   border-right: none;
 }
 
@@ -28,17 +28,21 @@ window#waybar {
   padding: 0 15px;
   margin-top: 2px;
   border-radius: 15px 15px 15px 15px;
-  background: #595959;
-  color: #151515;
-  border: 2px solid #ff00ff;
+  background: rgba(63, 63, 63, 0.7);
+  color: rgb(216, 222, 233);
+  border: 2px solid rgba(255, 0, 255, 1.0);;
 }
+
+/* .modules-center::highlight {
+  color: rgb(255, 0, 233);
+} */
 
 .modules-left {
   border-radius: 0 15px 15px 0;
   margin-top: 2px;
-  background: #595959;
-  color: #151515;
-  border: 2px solid #ff00ff;
+  background: rgba(63, 63, 63, 0.7);
+  color: rgb(216, 222, 233);
+  border: 2px solid rgba(255, 0, 255, 1.0);;
   border-left: none;
 }
 
@@ -74,7 +78,7 @@ window#waybar {
 }
 
 #clock{
-  color: #ff00ff;
+  color: rgba(255, 0, 255, 1.0);;
 }
 
 #battery.charging {
@@ -84,7 +88,7 @@ window#waybar {
 
 #battery.warning:not(.charging) {
     background-color: #ffbe61;
-    color: black;
+    color: rgb(216, 222, 233);
 }
 
 #battery.critical:not(.charging) {
@@ -97,6 +101,9 @@ window#waybar {
     animation-direction: alternate;
 }
 
+#workspaces button {
+    color: rgb(216, 222, 233);
+}
 
 @keyframes blink {
     to {

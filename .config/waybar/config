@@ -1,7 +1,7 @@
 {
   "layer": "top", "position": "top",
   "modules-left": ["custom/logo", "clock",  "custom/weather", "disk", "memory", "cpu", "temperature", "custom/powerDraw", "hyprland/window" ],
-  "modules-center": [  "hyprland/workspaces"],
+  "modules-center": ["hyprland/workspaces"],
   "modules-right": ["tray",  "custom/clipboard", "backlight", "idle_inhibitor", "custom/colorpicker", "bluetooth", "pulseaudio", "network",  "battery" ],
   "reload_style_on_change":true,
 
@@ -22,9 +22,9 @@
 		"active": "",
 		"default": "" 
 	},
-       "persistent-workspaces": {
-         "*": [ 1, 2, 3, 4, 5, 6 ]
-       }
+  "persistent-workspaces": {
+    "*": [ 1, 2, 3, 4, 5, 6 ]
+  }
 },
 
 "idle_inhibitor":{
