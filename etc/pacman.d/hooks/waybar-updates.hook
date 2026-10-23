@@ -1,0 +1,12 @@
+# Refresh the waybar updates module after anything is installed or removed
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Operation = Remove
+Type = Package
+Target = *
+
+[Action]
+Description = Refreshing the waybar updates module...
+When = PostTransaction
+Exec = /usr/bin/pkill -RTMIN+8 waybar

@@ -1,0 +1,9 @@
+[Unit]
+Description=Watch for new findings from security-scan.timer
+
+[Path]
+PathChanged=/var/lib/security-scan/new
+Unit=security-scan-notify.service
+
+[Install]
+WantedBy=default.target

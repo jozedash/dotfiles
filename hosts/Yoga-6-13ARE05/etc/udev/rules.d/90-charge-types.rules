@@ -1,0 +1,2 @@
+# Let wheel users switch Long Life (conservation) mode from the waybar battery icon
+SUBSYSTEM=="power_supply", KERNEL=="BAT1", RUN+="/usr/bin/chgrp wheel /sys%p/charge_types", RUN+="/usr/bin/chmod g+w /sys%p/charge_types"

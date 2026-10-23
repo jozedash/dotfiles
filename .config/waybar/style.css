@@ -1,17 +1,14 @@
 * {
     border: none;
     font-size: 14px;
-    font-family: "JetBrainsMono Nerd Font,JetBrainsMono NF" ;
+    /* Text only: icons are SVGs from icons/, so no icon font is needed */
+    font-family: "JetBrains Mono", monospace;
     min-height: 25px;
 }
 
 window#waybar {
   background: transparent;
   margin: 5px;
-}
-
-#custom-logo {
-  padding: 0 10px;
 }
 
 .modules-right {
@@ -31,12 +28,7 @@ window#waybar {
   background: rgba(63, 63, 63, 0.7);
   color: rgb(216, 222, 233);
   border: 2px solid rgba(255, 0, 255, 1.0);
-  font-size: 24px;
 }
-
-/* .modules-center::highlight {
-  color: rgb(255, 0, 233);
-} */
 
 .modules-left {
   border-radius: 0 15px 15px 0;
@@ -47,10 +39,12 @@ window#waybar {
   border-left: none;
 }
 
-#battery,
+#custom-battery,
 #custom-clipboard,
 #custom-colorpicker,
 #custom-powerDraw,
+#custom-notification,
+#custom-updates,
 #bluetooth,
 #pulseaudio,
 #network,
@@ -61,38 +55,136 @@ window#waybar {
 #temperature,
 #custom-weather,
 #idle_inhibitor,
-#jack,
 #tray,
 #window,
 #workspaces,
 #clock {
   padding: 0 5px;
 }
-#pulseaudio {
-  padding-top: 3px;
+
+/* ---- Icons ----
+ * Each module draws its icon as a 16px background on the left, with the text
+ * pushed right of it. Modules whose icon changes swap the image per class. */
+
+#custom-logo,
+#custom-battery,
+#custom-clipboard,
+#custom-colorpicker,
+#custom-notification,
+#custom-updates,
+#custom-weather,
+#bluetooth,
+#pulseaudio,
+#network,
+#disk,
+#memory,
+#backlight,
+#cpu,
+#temperature,
+#idle_inhibitor {
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 16px;
+  padding-left: 22px;
 }
+
+#custom-logo {
+  background-image: url("icons/arch.svg");
+  background-position: center;
+  padding: 0 10px 0 18px;
+  margin-left: 6px;
+}
+
+#custom-weather      { background-image: url("icons/weather.svg"); }
+#disk                { background-image: url("icons/disk.svg"); }
+#memory              { background-image: url("icons/memory.svg"); }
+#cpu                 { background-image: url("icons/cpu.svg"); }
+#temperature         { background-image: url("icons/temperature.svg"); }
+#custom-clipboard    { background-image: url("icons/clipboard.svg"); }
+#custom-colorpicker  { background-image: url("icons/colorpicker.svg"); }
+#backlight           { background-image: url("icons/brightness.svg"); }
+
+#idle_inhibitor.activated   { background-image: url("icons/eye.svg"); }
+#idle_inhibitor.deactivated { background-image: url("icons/eye-off.svg"); }
+
+#bluetooth                  { background-image: url("icons/bluetooth-on.svg"); }
+#bluetooth.off,
+#bluetooth.disabled         { background-image: url("icons/bluetooth-off.svg"); }
+#bluetooth.connected        { background-image: url("icons/bluetooth-connected.svg"); }
+
+#pulseaudio.low             { background-image: url("icons/volume-low.svg"); }
+#pulseaudio.medium          { background-image: url("icons/volume-medium.svg"); }
+#pulseaudio.high            { background-image: url("icons/volume-high.svg"); }
+#pulseaudio.muted           { background-image: url("icons/volume-muted.svg"); }
+
+#network.wifi               { background-image: url("icons/wifi.svg"); }
+#network.ethernet           { background-image: url("icons/ethernet.svg"); }
+#network.linked,
+#network.disconnected,
+#network.disabled           { background-image: url("icons/disconnected.svg"); }
+
+/* swaync's classes: notification / none, with dnd- and inhibited- variants */
+#custom-notification.none,
+#custom-notification.inhibited-none          { background-image: url("icons/bell.svg"); }
+#custom-notification.notification,
+#custom-notification.inhibited-notification  { background-image: url("icons/bell-badge.svg"); }
+#custom-notification.dnd-none,
+#custom-notification.dnd-notification,
+#custom-notification.dnd-inhibited-none,
+#custom-notification.dnd-inhibited-notification { background-image: url("icons/dnd.svg"); }
+
+#custom-updates.updates     { background-image: url("icons/updates.svg"); }
+#custom-updates.reboot      { background-image: url("icons/reboot.svg"); }
+#custom-updates.pacnew      { background-image: url("icons/shield.svg"); }
+
+/* Battery: level rounded to 20%, plus charging and Long Life (leaf) variants */
+#custom-battery.level-0   { background-image: url("icons/battery-000.svg"); }
+#custom-battery.level-20  { background-image: url("icons/battery-020.svg"); }
+#custom-battery.level-40  { background-image: url("icons/battery-040.svg"); }
+#custom-battery.level-60  { background-image: url("icons/battery-060.svg"); }
+#custom-battery.level-80  { background-image: url("icons/battery-080.svg"); }
+#custom-battery.level-100 { background-image: url("icons/battery-100.svg"); }
+#custom-battery.level-0.charging   { background-image: url("icons/battery-000-charging.svg"); }
+#custom-battery.level-20.charging  { background-image: url("icons/battery-020-charging.svg"); }
+#custom-battery.level-40.charging  { background-image: url("icons/battery-040-charging.svg"); }
+#custom-battery.level-60.charging  { background-image: url("icons/battery-060-charging.svg"); }
+#custom-battery.level-80.charging  { background-image: url("icons/battery-080-charging.svg"); }
+#custom-battery.level-100.charging { background-image: url("icons/battery-100-charging.svg"); }
+#custom-battery.level-0.longlife   { background-image: url("icons/battery-000-longlife.svg"); }
+#custom-battery.level-20.longlife  { background-image: url("icons/battery-020-longlife.svg"); }
+#custom-battery.level-40.longlife  { background-image: url("icons/battery-040-longlife.svg"); }
+#custom-battery.level-60.longlife  { background-image: url("icons/battery-060-longlife.svg"); }
+#custom-battery.level-80.longlife  { background-image: url("icons/battery-080-longlife.svg"); }
+#custom-battery.level-100.longlife { background-image: url("icons/battery-100-longlife.svg"); }
+#custom-battery.level-0.charging.longlife   { background-image: url("icons/battery-000-charging-longlife.svg"); }
+#custom-battery.level-20.charging.longlife  { background-image: url("icons/battery-020-charging-longlife.svg"); }
+#custom-battery.level-40.charging.longlife  { background-image: url("icons/battery-040-charging-longlife.svg"); }
+#custom-battery.level-60.charging.longlife  { background-image: url("icons/battery-060-charging-longlife.svg"); }
+#custom-battery.level-80.charging.longlife  { background-image: url("icons/battery-080-charging-longlife.svg"); }
+#custom-battery.level-100.charging.longlife { background-image: url("icons/battery-100-charging-longlife.svg"); }
+
+/* ---- Colours ---- */
 
 #temperature.critical,
 #pulseaudio.muted {
   color: #FF0000;
-  padding-top: 0;
 }
 
 #clock{
   color: rgba(255, 0, 255, 1.0);;
 }
 
-#battery.charging {
+#custom-battery.charging {
     color: #ffffff;
     background-color: #26A65B;
 }
 
-#battery.warning:not(.charging) {
+#custom-battery.warning {
     background-color: #ffbe61;
     color: rgb(216, 222, 233);
 }
 
-#battery.critical:not(.charging) {
+#custom-battery.critical {
     background-color: #f53c3c;
     color: #ffffff;
     animation-name: blink;
@@ -102,13 +194,38 @@ window#waybar {
     animation-direction: alternate;
 }
 
-#workspaces button {
-    color: rgb(216, 222, 233);
-}
-
 @keyframes blink {
     to {
         background-color: #ffffff;
         color: #000000;
     }
 }
+
+/* ---- Workspaces: CSS dots, filled for the active one ---- */
+
+#workspaces button {
+    padding: 0;
+    margin: 0 4px;
+    min-width: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+/* The label fills the bar's height, so vertical margins keep the dot round */
+#workspaces button label {
+    min-width: 10px;
+    min-height: 10px;
+    margin: 6px 0;
+    font-size: 0;
+    border-radius: 50%;
+    border: 2px solid rgb(216, 222, 233);
+}
+
+#workspaces button.active label {
+    background-color: rgb(216, 222, 233);
+}
+
+#workspaces button:hover label {
+    border-color: rgba(255, 0, 255, 1.0);
+}
+

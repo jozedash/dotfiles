@@ -1,0 +1,7 @@
+# udiskie: automount USB drives under /run/media/$USER/<label>.
+# Super+Shift+U unmounts everything (hyprland.lua).
+program_options:
+  automount: true
+  notify: true
+  tray: auto            # icon only while a drive is mounted
+  file_manager: kitty -e yazi

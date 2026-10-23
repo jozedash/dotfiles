@@ -1,0 +1,12 @@
+// Waybar settings specific to the Yoga 6 13ARE05, merged into ~/.config/waybar/config
+{
+  "backlight": {
+    "device": "amdgpu_bl1"
+  },
+
+  // k10temp Tctl, the CPU temperature (the default thermal zone is acpitz)
+  "temperature": {
+    "hwmon-path-abs": "/sys/devices/pci0000:00/0000:00:18.3/hwmon",
+    "input-filename": "temp1_input"
+  }
+}

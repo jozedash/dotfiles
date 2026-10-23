@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+#
+# Run weekly by security-scan.timer, as root, alongside pacman-download. Checks the
+# system for problems and writes one line per finding; the user's
+# security-scan-notify.path then sends a notification about any that are new.
+#
+# Checks:
+#   firewall   ufw isn't active
+#   port       something listens on a non-loopback address
+#   cve        installed package with a known vulnerability (arch-audit)
+#   altered    package file whose contents differ from the package (pacman -Qkk)
+#   unowned    executable or systemd unit that no package installed
+#   foreign    package not from the repos (AUR, or dropped from Arch): no updates
+#   rkhunter   rkhunter warning
+#
+# A finding is only reported as new once; the next scan compares against this one.
+# To see it all again: cat /var/lib/security-scan/report
+#
+# State in /var/lib/security-scan:
+#   findings   every finding from the last scan, sorted
+#   new        findings that weren't in the previous scan, empty when none
+#   report     findings plus the full output of each check
+
+STATE=/var/lib/security-scan
+export LC_ALL=C   # sort and comm must agree on the order
+mkdir -p "$STATE"
+chmod 755 "$STATE"   # the user's notifier reads it
+
+FINDINGS=$(mktemp)
+REPORT=$(mktemp)
+RKH=$(mktemp)
+trap 'rm -f "$FINDINGS" "$REPORT" "$RKH"' EXIT
+
+# section <title>: start a section of the report
+section() { printf '\n=== %s\n' "$1" >> "$REPORT"; }
+
+section "Firewall"
+if ufw status | tee -a "$REPORT" | grep -q '^Status: active'; then
+    :
+else
+    echo "firewall: ufw is not active (sudo ufw enable && sudo systemctl enable ufw)" >> "$FINDINGS"
+fi
+
+section "Listening on the network"
+# Local address is column 5; loopback and the DHCPv6 client (546) are expected
+ss -tulnH | tee -a "$REPORT" |
+    awk '$5 !~ /^(127\.|\[::1\]|\[::ffff:127\.)/ && $5 !~ /:546$/ {print "port: " $1 " " $5}' |
+    sort -u >> "$FINDINGS"
+
+section "Known vulnerabilities (arch-audit)"
+if command -v arch-audit > /dev/null; then
+    # -u would only list ones with a fix; all of them is more useful to know about
+    arch-audit 2>&1 | tee -a "$REPORT" | sed 's/^/cve: /' >> "$FINDINGS"
+else
+    echo "arch-audit isn't installed: sudo pacman -S arch-audit" | tee -a "$REPORT"
+fi
+
+section "Altered package files (pacman -Qkk)"
+# Edited config files ("backup file:") are expected; anything else changing is not
+# (a size mismatch always comes with a checksum mismatch, so it isn't matched)
+pacman -Qkk 2>&1 | grep -E '^warning: .*\((SHA256 checksum|File type) mismatch\)$' |
+    tee -a "$REPORT" | sed 's/^warning: /altered: /' >> "$FINDINGS"
+
+section "Files no package owns"
+# Symlinks are skipped: enabling a unit creates them in /etc/systemd/system
+comm -23 \
+    <(find /usr/bin /usr/local/bin /usr/lib/systemd/system /etc/systemd/system \
+        -maxdepth 1 -type f 2>/dev/null | sort) \
+    <(pacman -Qlq | sort -u) |
+    tee -a "$REPORT" | sed 's/^/unowned: /' >> "$FINDINGS"
+
+section "Packages not from the repos"
+pacman -Qm | tee -a "$REPORT" | sed 's/^/foreign: /' >> "$FINDINGS"
+
+section "rkhunter"
+# Its file properties check flags every upgraded file until 'rkhunter --propupd';
+# pacman -Qkk above checks the same files against the signed packages instead
+rkhunter --check --sk --rwo --nocolors --disable properties > "$RKH" 2>&1
+cat "$RKH" >> "$REPORT"
+grep '^Warning:' "$RKH" | sed 's/^Warning: /rkhunter: /' >> "$FINDINGS"
+
+sort -u "$FINDINGS" -o "$FINDINGS"
+{ echo "Security scan $(date '+%F %T')"; echo; cat "$FINDINGS"; cat "$REPORT"; } > "$STATE/report"
+
+# Previous findings count as seen; the first scan reports everything
+touch "$STATE/findings"
+NEW=$(comm -13 "$STATE/findings" "$FINDINGS")
+cp "$FINDINGS" "$STATE/findings"
+chmod 644 "$STATE/report" "$STATE/findings"
+# Only touch new when it changes, each write triggers a notification
+if [ "$NEW" != "$(cat "$STATE/new" 2>/dev/null)" ]; then
+    printf '%s' "$NEW" > "$STATE/new"
+    chmod 644 "$STATE/new"
+fi

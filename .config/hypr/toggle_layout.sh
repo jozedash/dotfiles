@@ -11,9 +11,11 @@
 
 STATEDIR="${XDG_STATE_HOME:-$HOME/.local/state}/hypr/layouts"
 RUNDIR="${XDG_RUNTIME_DIR:-/tmp}"
-LAPTOP_OUTPUT="eDP-1"
-LAPTOP_MODE="1920x1080@60"
 GAMING_MODE="1600x900@60"
+# LAPTOP_OUTPUT and LAPTOP_MODE are detected below (eDP/LVDS/DSI output, best
+# mode) unless set here. Machine-specific overrides (see hosts/ in the dotfiles repo)
+HOST_CONF="${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles-host/host.sh"
+[ -f "$HOST_CONF" ] && . "$HOST_CONF"
 # set -x
 
 # Add layouts here, in the order toggle cycles through them
@@ -36,6 +38,14 @@ if [ "$1" == "hotplug" ]; then
 fi
 
 MONITORS_JSON=$(hyprctl -j monitors all)
+if [ -z "$LAPTOP_OUTPUT" ]; then
+    LAPTOP_OUTPUT=$(jq -r '[.[].name | select(test("^(eDP|LVDS|DSI)"))][0] // "eDP-1"' <<< "$MONITORS_JSON")
+fi
+if [ -z "$LAPTOP_MODE" ]; then
+    LAPTOP_MODE=$(jq -r --arg laptop "$LAPTOP_OUTPUT" \
+        '[.[] | select(.name == $laptop)][0].availableModes[0] // "preferred"' <<< "$MONITORS_JSON" | sed 's/Hz$//')
+fi
+LAPTOP_H=$(grep -oP '^\d+x\K\d+' <<< "$LAPTOP_MODE")
 EXTERNALS_JSON=$(jq -c --arg laptop "$LAPTOP_OUTPUT" \
     '[.[] | select(.name != $laptop and (.name | test("^(FALLBACK|HEADLESS)") | not))]' \
     <<< "$MONITORS_JSON")
@@ -140,7 +150,7 @@ case "$LAYOUT" in
     extend)
         # Laptop sits bottom-right of the external monitor
         monitor_on "$MONITOR" "$EXT_MODE" "0x0"
-        monitor_on "$LAPTOP_OUTPUT" "$LAPTOP_MODE" "${EXT_W:-1920}x$(( ${EXT_H:-1080} - 1080 ))"
+        monitor_on "$LAPTOP_OUTPUT" "$LAPTOP_MODE" "${EXT_W:-1920}x$(( ${EXT_H:-1080} - ${LAPTOP_H:-1080} ))"
         move_workspaces "$MONITOR" "$LAPTOP_OUTPUT" "$MONITOR" "$LAPTOP_OUTPUT" "$MONITOR" "$LAPTOP_OUTPUT"
         ;;
     laptop)

@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+#
+# Run weekly by pacman-download.timer, as root. Downloads pending updates into the
+# pacman cache without installing anything, then the user's
+# pacman-updates-notify.path sends a notification and refreshes waybar.
+#
+# checkupdates syncs a temporary copy of the package databases, so this can never
+# cause a partial upgrade. Installing is still done by hand: sudo pacman -Syu
+#
+# State in /var/lib/pacman-download:
+#   pending       checkupdates output ("pkg old -> new"), empty when up to date
+#   news          Arch news titles published since the previous run
+#   news-checked  when the news was last checked (seconds since the epoch)
+#   error         why the last download failed, empty after a success
+
+STATE=/var/lib/pacman-download
+FEED=https://archlinux.org/feeds/news/
+mkdir -p "$STATE"
+touch "$STATE/error"
+
+# News first, so the notification about the download can mention it
+if XML=$(curl -sf --max-time 60 "$FEED"); then
+    SINCE=$(cat "$STATE/news-checked" 2>/dev/null || date -d '7 days ago' +%s)
+    NEWS=""
+    COUNT=$(xmllint --xpath 'count(//item)' - <<< "$XML")
+    for ((i = 1; i <= COUNT; i++)); do
+        DATE=$(date -d "$(xmllint --xpath "string(//item[$i]/pubDate)" - <<< "$XML")" +%s)
+        if [ "$DATE" -gt "$SINCE" ]; then
+            NEWS+="$(date -d "@$DATE" +%F) $(xmllint --xpath "string(//item[$i]/title)" - <<< "$XML")"$'\n'
+        fi
+    done
+    printf '%s' "$NEWS" > "$STATE/news"
+    date +%s > "$STATE/news-checked"
+fi
+
+OUT=$(mktemp)
+ERR=$(mktemp)
+trap 'rm -f "$OUT" "$ERR"' EXIT
+
+checkupdates -d > "$OUT" 2> "$ERR"
+case $? in
+    0|2) # 2 means there are no updates
+        # -d also prints pacman's download output; keep only "pkg old -> new" lines
+        grep -E '^[^ ]+ [^ ]+ -> [^ ]+$' "$OUT" > "$STATE/pending"
+        # Only touch error when it changes, each write triggers a notification
+        [ -s "$STATE/error" ] && : > "$STATE/error"
+        exit 0
+        ;;
+    *)
+        # Restart=on-failure retries hourly; only the first failure notifies
+        if [ ! -s "$STATE/error" ]; then
+            { date '+%F %T'; cat "$ERR"; } > "$STATE/error"
+        fi
+        cat "$ERR" >&2
+        exit 1
+        ;;
+esac

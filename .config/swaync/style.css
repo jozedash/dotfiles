@@ -1,0 +1,30 @@
+/* Matches the waybar style. Builds on swaync's default theme and only changes
+ * colours, borders and corners. */
+@import url("file:///etc/xdg/swaync/style.css");
+
+@define-color cc-bg rgba(63, 63, 63, 0.7);
+@define-color noti-bg rgba(63, 63, 63, 0.7);
+@define-color noti-bg-opaque rgb(63, 63, 63);
+@define-color noti-border-color #ff00ff;
+@define-color text-color #d8dee9;
+@define-color bg-selected #8800ff;
+
+.notification-row .notification-background .notification,
+.control-center,
+.floating-notifications .notification {
+  border: 2px solid #ff00ff;
+  border-radius: 15px;
+  color: #d8dee9;
+}
+
+.notification-row .notification-background .notification {
+  background: rgba(63, 63, 63, 0.7);
+}
+
+.notification-row .notification-background .notification.critical {
+  border-color: #f53c3c;
+}
+
+.control-center {
+  background: rgba(63, 63, 63, 0.7);
+}

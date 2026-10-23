@@ -1,24 +1,9 @@
-#!/bin/sh
-BSSIDS="$(nmcli device wifi list |
-    awk 'NR>1 {if ($1 != "*") {print $1}}' |
-    tr -d ":" |
-    tr "\n" ",")"
+#!/usr/bin/env bash
+# Current temperature from wttr.in, which finds the location from the IP address.
+# Prints nothing (hiding the module) when offline.
 
-LOC=""
-REQUEST_GEO="$(wget -qO - http://openwifi.su/api/v1/bssids/"$BSSIDS")"
-if [[ "$(jq ".count_results" <<< "$REQUEST_GEO")" -gt 0 ]] ; then
-    LAT="$(jq ".lat" <<< "$REQUEST_GEO")"
-    LON="$(jq ".lon" <<< "$REQUEST_GEO")"
-    LOC="$LAT,$LON"
-fi
+TEXT=$(curl -sf --max-time 10 'https://wttr.in/?format=%t') || exit 0
+grep -q "Unknown location" <<< "$TEXT" && exit 0
+TOOLTIP=$(curl -sf --max-time 10 'https://wttr.in/?0QT')
 
-text="$(curl -s "https://wttr.in/$LOC?format=1" | sed 's/ //g')"
-tooltip="$(curl -s "https://wttr.in/$LOC?0QT" |
-    sed 's/\\/\\\\/g' |
-    sed ':a;N;$!ba;s/\n/\\n/g' |
-    sed 's/"/\\"/g')"
-
-if ! grep -q "Unknown location" <<< "$text"; then
-    echo "{\"text\": \"$text\", \"tooltip\": \"<tt>$tooltip</tt>\", \"class\": \"weather\"}"
-fi
-
+jq -cn --arg text "${TEXT#+}" --arg tooltip "<tt>$TOOLTIP</tt>" '{$text, $tooltip, class: "weather"}'

@@ -51,7 +51,6 @@ local browser = "firefox"
 hl.on("hyprland.start", function()
     hl.exec_cmd(".config/hypr/toggle_layout.sh")
     hl.exec_cmd(terminal)
-    hl.exec_cmd("nm-applet &")
     hl.exec_cmd("waybar & hyprpaper & firefox")
     hl.exec_cmd("hypridle")
     hl.exec_cmd("systemctl --user start pipewire")
@@ -59,6 +58,9 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("systemctl --user start hyprpolkitagent")
 
     hl.exec_cmd("fcitx5 --replace -d")
+    hl.exec_cmd("swaync")
+    hl.exec_cmd("wl-paste --watch cliphist store")
+    hl.exec_cmd("udiskie")
 end)
 
 -- Re-apply the remembered display layout when monitors are (un)plugged, so unplugging
@@ -291,7 +293,11 @@ hl.bind(mainMod .. " + P", hl.dsp.exec_cmd(".config/hypr/toggle_layout.sh toggle
 hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd(".config/hypr/toggle_layout.sh prev"))
 hl.bind(mainMod .. " + SHIFT + J", hl.dsp.window.pseudo()) -- dwindle
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd(lock))
+-- Shift so it can't be hit by accident; hypridle locks the screen before it sleeps
+hl.bind(mainMod .. " + SHIFT + H", hl.dsp.exec_cmd("systemctl hibernate"))
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("hyprshot -m region"))
+hl.bind(mainMod .. " + U", hl.dsp.exec_cmd("kitty -e .config/waybar/scripts/upgrade.sh"))
+hl.bind(mainMod .. " + SHIFT + U", hl.dsp.exec_cmd("udiskie-umount --all"))
 
 -- Move focus with mainMod + arrow keys
 hl.bind(mainMod .. " + left", hl.dsp.focus({ direction = "left" }))

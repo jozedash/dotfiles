@@ -1,0 +1,11 @@
+[Unit]
+Description=Weekly security scan (firewall, ports, CVEs, altered files, rkhunter)
+Documentation=file:///usr/local/bin/security-scan
+Wants=network-online.target
+After=network-online.target pacman-download.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/security-scan
+Nice=19
+IOSchedulingClass=idle

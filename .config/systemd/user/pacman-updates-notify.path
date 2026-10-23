@@ -1,0 +1,10 @@
+[Unit]
+Description=Watch for updates downloaded by pacman-download.timer
+
+[Path]
+PathChanged=/var/lib/pacman-download/pending
+PathChanged=/var/lib/pacman-download/error
+Unit=pacman-updates-notify.service
+
+[Install]
+WantedBy=default.target

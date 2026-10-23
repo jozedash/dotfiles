@@ -1,0 +1,6 @@
+[Unit]
+Description=Notify about new findings from security-scan.timer
+
+[Service]
+Type=oneshot
+ExecStart=%h/.config/systemd/user/security-scan-notify.sh

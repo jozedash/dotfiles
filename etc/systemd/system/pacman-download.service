@@ -1,0 +1,13 @@
+[Unit]
+Description=Download pending pacman updates (without installing them)
+Documentation=file:///home/joe/dotfiles/docs/pacman-download-failures.md
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/pacman-download
+Restart=on-failure
+RestartSec=1h
+Nice=19
+IOSchedulingClass=idle

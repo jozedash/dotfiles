@@ -1,0 +1,10 @@
+[Unit]
+Description=Weekly security scan, alongside pacman-download.timer
+
+[Timer]
+OnCalendar=weekly
+Persistent=true
+RandomizedDelaySec=1h
+
+[Install]
+WantedBy=timers.target

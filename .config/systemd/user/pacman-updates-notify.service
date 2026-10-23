@@ -1,0 +1,6 @@
+[Unit]
+Description=Notify about updates downloaded by pacman-download.timer
+
+[Service]
+Type=oneshot
+ExecStart=%h/.config/systemd/user/pacman-updates-notify.sh
