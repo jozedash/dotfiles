@@ -4,7 +4,7 @@
   "include": ["~/.config/dotfiles-host/waybar.jsonc"],
   "modules-left": ["custom/logo", "clock",  "custom/weather", "disk", "memory", "cpu", "temperature", "custom/powerDraw", "hyprland/window" ],
   "modules-center": ["hyprland/workspaces"],
-  "modules-right": ["custom/updates", "tray", "custom/notification", "custom/clipboard", "backlight", "idle_inhibitor", "custom/colorpicker", "bluetooth", "pulseaudio", "network", "custom/battery" ],
+  "modules-right": ["custom/updates", "tray", "custom/usb", "custom/notification", "custom/clipboard", "backlight", "idle_inhibitor", "custom/colorpicker", "bluetooth", "pulseaudio", "network", "custom/battery" ],
   "reload_style_on_change":true,
 
   // Icons are SVGs drawn by style.css (see icons/), so formats only hold text.
@@ -164,6 +164,17 @@
     "on-click": "swaync-client -t -sw",
     "on-click-right": "swaync-client -d -sw",
     "escape": true
+  },
+
+  // Drives mounted by udiskie (hidden when there are none)
+  "custom/usb": {
+    "format": "{}",
+    "return-type": "json",
+    "exec": "~/.config/waybar/scripts/usb.sh",
+    "interval": 10,
+    "signal": 10,
+    "on-click": "kitty -e yazi /run/media/$USER",
+    "on-click-right": "udiskie-umount --all"
   },
 
   "custom/updates": {

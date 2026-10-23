@@ -33,6 +33,7 @@ hl.monitor({
 -- Set programs that you use
 local terminal = "kitty --hold -e fastfetch"
 local fileManager = "kitty -e yazi"
+local fileManager2 = "thunar"
 local menu = "wofi --show drun"
 local lock = "hyprlock"
 local code = "code"
@@ -286,6 +287,7 @@ hl.bind(mainMod .. " + C", hl.dsp.window.close())
 hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd(code))
 hl.bind(mainMod .. " + M", hl.dsp.exit())
 hl.bind(mainMod .. " + F", hl.dsp.exec_cmd(fileManager))
+hl.bind(mainMod .. " + SHIFT + F", hl.dsp.exec_cmd(fileManager2))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(email))
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(menu))

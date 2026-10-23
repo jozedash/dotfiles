@@ -3,5 +3,9 @@
 program_options:
   automount: true
   notify: true
-  tray: auto            # icon only while a drive is mounted
+  # No tray icon: waybar's custom/usb module shows mounted drives instead,
+  # in the bar's icon style, refreshed by this hook on every udiskie event
+  tray: false
+  # The delay lets udisks finish cleaning up a mount when a drive is pulled out
+  event_hook: sh -c 'sleep 1; pkill -RTMIN+10 waybar'
   file_manager: kitty -e yazi

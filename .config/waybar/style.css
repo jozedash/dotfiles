@@ -45,6 +45,7 @@ window#waybar {
 #custom-powerDraw,
 #custom-notification,
 #custom-updates,
+#custom-usb,
 #bluetooth,
 #pulseaudio,
 #network,
@@ -72,6 +73,7 @@ window#waybar {
 #custom-colorpicker,
 #custom-notification,
 #custom-updates,
+#custom-usb,
 #custom-weather,
 #bluetooth,
 #pulseaudio,
@@ -136,6 +138,8 @@ window#waybar {
 #custom-updates.updates     { background-image: url("icons/updates.svg"); }
 #custom-updates.reboot      { background-image: url("icons/reboot.svg"); }
 #custom-updates.pacnew      { background-image: url("icons/shield.svg"); }
+
+#custom-usb                 { background-image: url("icons/usb.svg"); }
 
 /* Battery: level rounded to 20%, plus charging and Long Life (leaf) variants */
 #custom-battery.level-0   { background-image: url("icons/battery-000.svg"); }

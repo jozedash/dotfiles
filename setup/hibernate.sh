@@ -10,6 +10,7 @@
 #      generated from this machine's own HOOKS, and rebuilds it if that changed
 #
 # None of this is in git: the UUID, offset and HOOKS are specific to each machine.
+# logind also needs to see /home: etc/systemd/system/systemd-logind.service.d/.
 
 SWAPFILE=/home/swapfile
 

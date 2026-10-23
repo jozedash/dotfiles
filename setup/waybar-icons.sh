@@ -48,3 +48,4 @@ put dnd $s/status/notifications-disabled-symbolic.svg
 put updates $s/status/software-update-available-symbolic.svg
 put reboot $s/actions/system-reboot-symbolic.svg
 put shield $s/status/security-high-symbolic.svg
+put usb $s/devices/drive-removable-media-usb-pendrive-symbolic.svg
