@@ -10,6 +10,7 @@ from theme.palette()), a line in TARGETS, and its reload command in RELOADS.
 """
 
 import argparse
+import fcntl
 import hashlib
 import re
 import shutil
@@ -27,6 +28,8 @@ CONFIG = Path.home() / ".config"
 FCITX5_THEME = Path.home() / ".local/share/fcitx5/themes/hypr"
 GTK_THEMES = Path.home() / ".local/share/themes"
 OUR_GTK_THEME = re.compile(r"Hypr-(dark|light)-[0-9a-f]{8}")
+LOCK = theme.STATE_FILE.with_name("lock")
+SWAYNC_DEFAULT = Path("/etc/xdg/swaync/style.css")
 
 
 class Target(NamedTuple):
@@ -58,13 +61,12 @@ TARGETS = [
     Target(f"fcitx5/{name}.svg.in", FCITX5_THEME / f"{name}.png", needs=CONFIG / "fcitx5")
     for name in ("panel", "highlight")
 ] + [
-    # GTK itself is always there. The GTK3 theme is written by update_gtk3_theme.
+    # GTK itself is always there. The GTK3 theme comes from gtk3_theme.
     Target("gtk/gtk3-settings.ini.in", CONFIG / "gtk-3.0/settings.ini", needs=CONFIG),
     Target("css-vars.css.in", CONFIG / "gtk-4.0/gtk.css",
            append=HERE / "templates/gtk/gtk4.css", needs=CONFIG),
     Target("gtk/gtk4-settings.ini.in", CONFIG / "gtk-4.0/settings.ini", needs=CONFIG),
 ]
-
 
 
 # GSettings for GTK and the colour scheme. On Wayland these win over
@@ -168,10 +170,10 @@ def adwaita_css(name):
     return Gio.resources_lookup_data(f"/org/gtk/libgtk/theme/Adwaita/{name}", 0).get_data().decode()
 
 
-def update_gtk3_theme(values):
-    """Write our GTK3 theme: Adwaita recoloured, our colour definitions, then
-    templates/gtk/gtk3.css for what recolouring can't do. Sets
-    values["gtk_theme"], its name.
+def gtk3_theme(values):
+    """Our GTK3 theme as (path, css): Adwaita recoloured, our colour
+    definitions, then templates/gtk/gtk3.css for what recolouring can't do.
+    Sets values["gtk_theme"], its name.
 
     GTK3 only re-reads a theme when its name changes, so the name carries a
     hash of the contents: any change (pair, mode, palette, gtk3.css) is a new
@@ -193,25 +195,45 @@ def update_gtk3_theme(values):
     digest = hashlib.sha256(body.encode()).hexdigest()[:8]
     values["gtk_theme"] = f"Hypr-{values['mode']}-{digest}"
     css = render("gtk/gtk3-header.css.in", values) + body
-    write_if_changed(GTK_THEMES / values["gtk_theme"] / "gtk-3.0/gtk.css", css)
+    return GTK_THEMES / values["gtk_theme"] / "gtk-3.0/gtk.css", css
 
 
 def update_gsettings(values):
     """Set the GSettings that differ, then delete our GTK themes that are no
     longer in use. Done even with --no-reload: they're settings, not reloads.
-    Without a session bus (e.g. under sudo) gsettings fails; that's fine."""
-    if not shutil.which("gsettings"):
-        return
+    Without a session bus (e.g. under sudo) setting fails; the theme
+    GSettings still names is then kept, so apps don't lose it."""
     schema = "org.gnome.desktop.interface"
-    for key, name in GSETTINGS:
-        current = subprocess.run(["gsettings", "get", schema, key],
-                                 capture_output=True, text=True).stdout.strip()
-        if current != f"'{values[name]}'":
-            subprocess.run(["gsettings", "set", schema, key, values[name]], capture_output=True)
+
+    def get(key):
+        return subprocess.run(["gsettings", "get", schema, key],
+                              capture_output=True, text=True).stdout.strip()
+
+    in_use = {values["gtk_theme"]}
+    if shutil.which("gsettings"):
+        for key, name in GSETTINGS:
+            if get(key) != f"'{values[name]}'":
+                subprocess.run(["gsettings", "set", schema, key, values[name]], capture_output=True)
+        in_use.add(get("gtk-theme").strip("'"))
     if GTK_THEMES.is_dir():
         for old in GTK_THEMES.iterdir():
-            if OUR_GTK_THEME.fullmatch(old.name) and old.name != values["gtk_theme"]:
+            if OUR_GTK_THEME.fullmatch(old.name) and old.name not in in_use:
                 shutil.rmtree(old)
+
+
+def check_swaync():
+    """swaync's style overrides swaync's own CSS variables, which fails
+    silently if an update renames them: warn instead."""
+    ours = (CONFIG / "swaync/style.css").read_text().split("}")[0]
+    names = set(re.findall(r"^\s*(--[\w-]+):", ours, re.M))
+    try:
+        default = SWAYNC_DEFAULT.read_text()
+    except OSError:
+        warn(f"swaync: {SWAYNC_DEFAULT} is missing, notifications won't follow the theme")
+        return
+    missing = sorted(n for n in names if n not in default)
+    if missing:
+        warn(f"swaync no longer uses {', '.join(missing)}: update ~/.config/swaync/style.css")
 
 
 def reload(values):
@@ -222,9 +244,13 @@ def reload(values):
         if not shutil.which(command[0]):
             continue
         try:
-            subprocess.run(command, capture_output=True, timeout=5)
+            result = subprocess.run(command, capture_output=True, text=True, timeout=5)
         except subprocess.TimeoutExpired:
-            print(f"theme-apply: {' '.join(command)} timed out", file=sys.stderr)
+            warn(f"{' '.join(command)} timed out")
+            continue
+        if result.returncode != 0:
+            # Most likely the program's IPC changed in an update
+            warn(f"reloading {name} failed: {(result.stderr or result.stdout).strip()}")
 
 
 def update_state(args, state):
@@ -277,14 +303,24 @@ def main():
                         help="only write the files, don't signal running programs")
     args = parser.parse_args()
 
+    # One run at a time: the popup, waybar's clicks and the keybind can
+    # overlap, and each reads, changes and writes the state
+    LOCK.parent.mkdir(parents=True, exist_ok=True)
+    with open(LOCK, "w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        apply(args)
+
+
+def apply(args):
     state = theme.load_state()
     error = update_state(args, state)
     if error:
         sys.exit(f"theme-apply: {error}")
-    theme.save_state(state)
 
+    # Render everything before writing anything, so a broken template (render
+    # exits) leaves the state and every file as they were
     values = theme.palette(state)
-    update_gtk3_theme(values)  # first: settings.ini below needs its name
+    outputs = [gtk3_theme(values)]  # first: settings.ini below needs its name
     for target in TARGETS:
         if (target.needs or target.output.parent).is_dir():
             text = render(target.template, values)
@@ -292,9 +328,15 @@ def main():
                 text += "\n" + target.append.read_text()
             if target.output.suffix == ".png":
                 text = rasterise(text)
-            write_if_changed(target.output, text)
+            outputs.append((target.output, text))
+
+    theme.save_state(state)
+    for path, data in outputs:
+        write_if_changed(path, data)
     update_icons(values)
     update_gsettings(values)
+    if (CONFIG / "swaync").is_dir():
+        check_swaync()
     if not args.no_reload:
         reload(values)
 

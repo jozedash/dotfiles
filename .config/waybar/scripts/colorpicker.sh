@@ -24,22 +24,13 @@ limit=10
 }
 
 [[ $# -eq 1 && $1 = "-j" ]] && {
-  text="$(head -n 1 "$loc/colors")"
-
-  mapfile -t allcolors < <(tail -n +2 "$loc/colors")
-  # allcolors=($(tail -n +2 "$loc/colors"))
-  tooltip="<b>COLORS</b>\n\n"
-
-  # The picker icon comes from style.css; the swatch shows the last colour
-  tooltip+="-> <b>$text</b>  <span color='$text'>■</span>  \n"
-  for i in "${allcolors[@]}"; do
-    tooltip+="   <b>$i</b>  <span color='$i'>■</span>  \n"
-  done
-
-  cat <<EOF
-{ "text":"<span color='${text:-#d8dee9}'>■</span>", "tooltip":"$tooltip"}
-EOF
-
+  # The picker icon comes from style.css; the swatch shows the last colour,
+  # the tooltip the whole history
+  jq -cn --arg last "$(head -n 1 "$loc/colors")" --rawfile all "$loc/colors" '
+    ($all | split("\n") | map(select(. != ""))) as $c
+    | { text: "<span color=\"\(if $last == "" then "#d8dee9" else $last end)\">■</span>",
+        tooltip: ("<b>COLORS</b>\n\n" + ($c | to_entries | map((if .key == 0 then "-> " else "   " end)
+            + "<b>\(.value)</b>  <span color=\"\(.value)\">■</span>") | join("\n"))) }'
   exit
 }
 
@@ -47,7 +38,7 @@ check hyprpicker || {
   notify "hyprpicker is not installed"
   exit
 }
-killall -q hyprpicker
+pkill -x hyprpicker
 color=$(hyprpicker)
 
 check wl-copy && {

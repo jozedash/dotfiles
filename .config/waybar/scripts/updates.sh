@@ -6,6 +6,8 @@
 # merge. Prints nothing (hiding the module) when there's nothing to do.
 
 STATE=/var/lib/pacman-download
+# The repo, through the ~/.config symlink this script is run from
+DOCS=$(readlink -f "$(dirname "$0")/../../..")/docs
 
 # pending lines look like "linux 7.2.10.arch1-1 -> 7.2.11.arch1-1"
 UPDATES=()
@@ -33,7 +35,7 @@ if $REBOOT; then
     TOOLTIP+="\n\nThe kernel was upgraded: reboot to load the new one"
 fi
 if [ -s "$STATE/error" ]; then
-    TOOLTIP+="\n\nLast download failed, see ~/dotfiles/docs/pacman-download-failures.md:\n$(cat "$STATE/error")"
+    TOOLTIP+="\n\nLast download failed, see $DOCS/pacman-download-failures.md:\n$(cat "$STATE/error")"
 fi
 
 if $REBOOT; then

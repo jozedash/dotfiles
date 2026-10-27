@@ -1,6 +1,6 @@
 [Unit]
 Description=Download pending pacman updates (without installing them)
-Documentation=file:///home/joe/dotfiles/docs/pacman-download-failures.md
+Documentation=https://github.com/jozedash/dotfiles/blob/main/docs/pacman-download-failures.md
 Wants=network-online.target
 After=network-online.target
 

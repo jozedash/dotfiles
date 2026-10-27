@@ -1,5 +1,5 @@
 [Unit]
-Description=Weekly security scan, alongside pacman-download.timer
+Description=Weekly security scan
 
 [Timer]
 OnCalendar=weekly

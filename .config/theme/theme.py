@@ -1,5 +1,5 @@
-"""Shared code for the theme switcher: the state file, the per-mode palettes
-and the colour maths. Used by theme-apply (and later the popup)."""
+"""Shared code for the theme switcher (theme-apply and theme-popup): the
+state file, the per-mode palettes and the colour maths."""
 
 import colorsys
 import json

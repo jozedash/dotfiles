@@ -193,7 +193,7 @@ window#waybar {
 
 #custom-battery.warning {
     background-color: #ffbe61;
-    color: @fg;
+    color: #3b3631; /* dark text in both modes: light text on the yellow is 1.2:1 */
 }
 
 #custom-battery.critical {

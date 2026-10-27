@@ -12,6 +12,7 @@ Archlinux dotfiles
 * [Desktop config](#desktop-config)
 * [Basic apps, config, security](#basic-apps-fonts-and-security)
 * [Theme](#theme)
+* [Chinese input](#chinese-input-fcitx5)
 * [Updates](#updates)
 * [Hibernate](#hibernate)
 * [Security scan](#security-scan)
@@ -64,11 +65,7 @@ The script changes fairly frequently, so work thorugh the options and find the c
 * Audio config
 	* pipewire
 * Copy network config to installation
-* Additional packages (use / to search)
-	* hyprpaper
-	* waybar
-	* kitty
-	* wofi
+* Additional packages: none needed, `setup.sh` installs them
 
 ## Manual setup:
 * [Whatsapp](https://web.whatsapp.com/)
@@ -107,8 +104,10 @@ Add the following to the bottom of the file:
 	if [[ -z $DISPLAY ]] && [[ $(tty) == /dev/tty1 ]]; then
 	  export XDG_CURRENT_DESKTOP=Hyprland
 	  export XDG_SESSION_TYPE=wayland
-	  exec Hyprland
+	  exec start-hyprland
 	fi
+
+(`setup.sh` links the repo's `.bash_profile`, which already does this.)
 
 ## Desktop Config:
 
@@ -161,6 +160,18 @@ and terminal colours are in `.config/theme/theme.py`, the picker's squares in
 To theme another program: add a template using `@primary@`-style
 placeholders (see `palette()` in `theme.py` for the names), a `Target` line
 in `theme-apply`, and its reload command in `RELOADS`.
+
+### Chinese input (fcitx5)
+
+Ctrl+Space switches between the gb keyboard and pinyin. The candidate
+window's font is Source Han Sans CN 11, to match the desktop default
+(Adwaita Sans 11).
+
+fcitx5 rewrites the files in `.config/fcitx5/` when you change settings in
+fcitx5-configtool (and on its autosave), replacing any comments with its
+own. So the reasons for settings live here, not in those files. After
+changing input settings, review `git diff .config/fcitx5` and commit or
+revert.
 
 ### Hibernate
 

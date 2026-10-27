@@ -9,7 +9,9 @@
 #   port       something listens on a non-loopback address
 #   cve        installed package with a known vulnerability (arch-audit)
 #   altered    package file whose contents differ from the package (pacman -Qkk)
-#   unowned    executable or systemd unit that no package installed
+#   unowned    executable or systemd unit that no package installed (files
+#              setup.sh copied from the dotfiles repo, listed in
+#              /etc/security-scan/expected, don't count)
 #   foreign    package not from the repos (AUR, or dropped from Arch): no updates
 #   rkhunter   rkhunter warning
 #
@@ -66,7 +68,7 @@ section "Files no package owns"
 comm -23 \
     <(find /usr/bin /usr/local/bin /usr/lib/systemd/system /etc/systemd/system \
         -maxdepth 1 -type f 2>/dev/null | sort) \
-    <(pacman -Qlq | sort -u) |
+    <({ pacman -Qlq; cat /etc/security-scan/expected 2>/dev/null; } | sort -u) |
     tee -a "$REPORT" | sed 's/^/unowned: /' >> "$FINDINGS"
 
 section "Packages not from the repos"

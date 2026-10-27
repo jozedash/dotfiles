@@ -11,4 +11,4 @@ copies `etc/` into `/etc` after the generic `etc/`.
 | `host.sh` | Laptop screen `eDP-1` at `1920x1080@60` (for `toggle_layout.sh`), battery `BAT1` (for waybar's `battery.sh`) |
 | `waybar.jsonc` | Backlight device `amdgpu_bl1` (not `intel_backlight`); CPU temperature from `k10temp` Tctl, because the default thermal zone is `acpitz` |
 | `etc/udev/rules.d/90-charge-types.rules` | Lets the `wheel` group write `/sys/class/power_supply/BAT1/charge_types`, so clicking the battery icon can switch Long Life mode |
-| `etc/tlp.conf` | The charge thresholds are left commented out. This battery has no `charge_control_end_threshold`, only `charge_types` (`Standard` / `Long_Life`, which holds about 60%), and TLP would reset it at every boot and every time the charger is plugged in |
+| (no `tlp.conf`) | TLP runs on its defaults. Don't set the charge thresholds: this battery has no `charge_control_end_threshold`, only `charge_types` (`Standard` / `Long_Life`, which holds about 60%), and TLP would reset it at every boot and every time the charger is plugged in. Any TLP setting this laptop does need goes in `etc/tlp.d/50-host.conf`, not a full `tlp.conf` |

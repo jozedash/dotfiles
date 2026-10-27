@@ -2,7 +2,7 @@
 Description=Weekly security scan (firewall, ports, CVEs, altered files, rkhunter)
 Documentation=file:///usr/local/bin/security-scan
 Wants=network-online.target
-After=network-online.target pacman-download.service
+After=network-online.target
 
 [Service]
 Type=oneshot

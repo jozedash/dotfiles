@@ -46,11 +46,15 @@
     "format": "{:%I:%M:%S %p}",
     "interval": 1,
     "tooltip-format": "\n<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
-    "calendar-weeks-pos": "right",
-    "today-format": "<span color='#7645AD'><b><u>{}</u></b></span>",
-    "format-calendar": "<span color='#aeaeae'><b>{}</b></span>",
-    "format-calendar-weeks": "<span color='#aeaeae'><b>W{:%V}</b></span>",
-    "format-calendar-weekdays": "<span color='#aeaeae'><b>{}</b></span>"
+    "calendar": {
+      "weeks-pos": "right",
+      "format": {
+        "today":    "<span color='#7645AD'><b><u>{}</u></b></span>",
+        "days":     "<span color='#aeaeae'><b>{}</b></span>",
+        "weeks":    "<span color='#aeaeae'><b>W{:%V}</b></span>",
+        "weekdays": "<span color='#aeaeae'><b>{}</b></span>"
+      }
+    }
   },
 
   "bluetooth": {
@@ -136,11 +140,7 @@
   },
 
   "hyprland/window": {
-    "format": "( {class} )",
-    "rewrite": {
-      "(.*) - Mozilla Firefox": "🌎 $1",
-      "(.*) - zsh": "> [$1]"
-    }
+    "format": "( {class} )"
   },
 
   "temperature": {
@@ -172,7 +172,7 @@
   "custom/notification": {
     "format": " ",
     "return-type": "json",
-    "exec-if": "which swaync-client",
+    "exec-if": "command -v swaync-client",
     "exec": "swaync-client -swb",
     "on-click": "swaync-client -t -sw",
     "on-click-right": "swaync-client -d -sw",
@@ -201,7 +201,7 @@
 
   "custom/powerDraw": {
     "format": "{}",
-    "interval": 1,
+    "interval": 5,
     "exec": "~/.config/waybar/scripts/powerdraw.sh",
     "return-type": "json"
   }

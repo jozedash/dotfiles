@@ -1,13 +1,5 @@
--- This is an example Hyprland Lua config file.
--- Refer to the wiki for more information.
+-- Hyprland config (Lua, 0.56+). Colours come from ~/.config/theme (README "Theme").
 -- https://wiki.hypr.land/Configuring/Start/
-
--- Please note not all available settings / options are set here.
--- For a full list, see the wiki
-
--- You can (and should!!) split this configuration into multiple files
--- Create your files separately and then require them like this:
--- require("myColors")
 
 
 ------------------
@@ -50,15 +42,15 @@ local browser = "firefox"
 -- Or execute your favorite apps at launch like this:
 
 hl.on("hyprland.start", function()
-    hl.exec_cmd(".config/hypr/toggle_layout.sh")
+    hl.exec_cmd("~/.config/hypr/toggle_layout.sh")
     hl.exec_cmd(terminal)
     -- Theme first: writes the colour files and sets the GSettings (dark/light,
     -- GTK theme) in this session, so the bar and Firefox start themed.
     -- link.sh runs it too, but under sudo there's no session to set them in.
     hl.exec_cmd("~/.config/theme/theme-apply --no-reload; waybar & hyprpaper & firefox")
     hl.exec_cmd("hypridle")
-    hl.exec_cmd("systemctl --user start pipewire")
-    hl.exec_cmd("systemctl --user start wireplumber")
+    -- pipewire and wireplumber are socket/unit activated; the polkit agent's
+    -- unit is tied to graphical-session.target, which only uwsm reaches
     hl.exec_cmd("systemctl --user start hyprpolkitagent")
 
     hl.exec_cmd("fcitx5 --replace -d")
@@ -70,15 +62,15 @@ end)
 -- Re-apply the remembered display layout when monitors are (un)plugged, so unplugging
 -- in docked/gaming mode falls back to the laptop screen instead of a black screen
 hl.on("monitor.added", function()
-    hl.exec_cmd(".config/hypr/toggle_layout.sh hotplug")
+    hl.exec_cmd("~/.config/hypr/toggle_layout.sh hotplug")
 end)
 hl.on("monitor.removed", function()
-    hl.exec_cmd(".config/hypr/toggle_layout.sh hotplug")
+    hl.exec_cmd("~/.config/hypr/toggle_layout.sh hotplug")
 end)
 
 -- A config reload resets the monitor rules set by toggle_layout.sh
 hl.on("config.reloaded", function()
-    hl.exec_cmd(".config/hypr/toggle_layout.sh apply")
+    hl.exec_cmd("~/.config/hypr/toggle_layout.sh apply")
 end)
 
 -------------------------------
@@ -243,8 +235,9 @@ hl.config({
 -- https://wiki.hypr.land/Configuring/Basics/Variables/#misc
 hl.config({
     misc = {
-        force_default_wallpaper = -1, -- Set to 0 or 1 to disable the anime mascot wallpapers
-        disable_hyprland_logo = false, -- If true disables the random hyprland logo / anime girl background. :(
+        -- hyprpaper draws the wallpaper; if it fails, a plain background shows it
+        force_default_wallpaper = 0,
+        disable_hyprland_logo = true,
     },
 })
 
@@ -276,13 +269,6 @@ hl.config({
 -- https://wiki.hypr.land/Configuring/Advanced-and-Cool/Gestures/
 -- hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
 
--- Example per-device config
--- See https://wiki.hypr.land/Configuring/Advanced-and-Cool/Devices/ for more
-hl.device({
-    name = "epic-mouse-v1",
-    sensitivity = -0.5,
-})
-
 
 ---------------------
 ---- KEYBINDINGS ----
@@ -302,14 +288,14 @@ hl.bind(mainMod .. " + SHIFT + F", hl.dsp.exec_cmd(fileManager2))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(email))
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(menu))
-hl.bind(mainMod .. " + P", hl.dsp.exec_cmd(".config/hypr/toggle_layout.sh toggle"))
-hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd(".config/hypr/toggle_layout.sh prev"))
+hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("~/.config/hypr/toggle_layout.sh toggle"))
+hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd("~/.config/hypr/toggle_layout.sh prev"))
 hl.bind(mainMod .. " + SHIFT + J", hl.dsp.window.pseudo()) -- dwindle
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd(lock))
 -- Shift so it can't be hit by accident; hypridle locks the screen before it sleeps
 hl.bind(mainMod .. " + SHIFT + H", hl.dsp.exec_cmd("systemctl hibernate"))
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("hyprshot -m region"))
-hl.bind(mainMod .. " + U", hl.dsp.exec_cmd("kitty -e .config/waybar/scripts/upgrade.sh"))
+hl.bind("Print", hl.dsp.exec_cmd("hyprshot -m region"))
+hl.bind(mainMod .. " + U", hl.dsp.exec_cmd("kitty -e ~/.config/waybar/scripts/upgrade.sh"))
 hl.bind(mainMod .. " + SHIFT + U", hl.dsp.exec_cmd("udiskie-umount --all"))
 hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd("~/.config/theme/theme-apply --toggle-mode"))
 

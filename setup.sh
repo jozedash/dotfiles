@@ -35,25 +35,30 @@ mkdir -p "$LOGDIR"
 exec > >(tee -a "$LOG") 2>&1
 
 PACKAGES=(
-    # Desktop
+    # Desktop (archinstall's Hyprland profile has most of these, but its
+    # contents change between ISOs, so everything the configs run is listed)
+    hyprland waybar kitty wofi xdg-desktop-portal-hyprland libnotify playerctl
     pipewire-audio pipewire-pulse wireplumber pavucontrol swaync hyprlock hypridle
     hyprshot hyprpicker hyprpolkitagent polkit blueman impala udiskie
     cliphist wl-clipboard brightnessctl tlp
     # Chinese input
     fcitx5-im fcitx5-rime fcitx5-chinese-addons fcitx5-pinyin-zhwiki fcitx5-configtool
     # Apps
-    thunar yazi fastfetch gnome-text-editor gnome-keyring keepassxc thunderbird
+    firefox thunar yazi fastfetch gnome-text-editor gnome-keyring keepassxc thunderbird
     libreoffice-still kid3 vlc-plugin-dvb btop htop
-    # Command line tools (several are yazi previewers; theme-apply uses resvg)
-    unzip 7zip jq poppler fd ripgrep fzf zoxide resvg imagemagick ffmpeg
+    # Command line tools (several are yazi previewers; theme-apply uses resvg,
+    # pacman-download curl and xmllint from libxml2)
+    unzip 7zip jq poppler fd ripgrep fzf zoxide resvg imagemagick ffmpeg curl libxml2
     # Phones and drives
     libimobiledevice usbmuxd ifuse ntfs-3g exfatprogs
     # Security and updates
     ufw rkhunter arch-audit pacman-contrib
     # Theme (.config/theme): Adwaita-dark, the icon theme, GTK for theme-apply
-    # and the popup, which sits under the bar via gtk-layer-shell, and
-    # hyprpaper for the mode's wallpaper
+    # and the popup, which sits under the bar via gtk-layer-shell, hyprpaper
+    # for the mode's wallpaper, and the GTK portal, which passes dark/light
+    # to Firefox and other portal apps
     gnome-themes-extra papirus-icon-theme python-gobject gtk-layer-shell hyprpaper
+    xdg-desktop-portal-gtk
     # Fonts. Waybar icons are SVGs in the repo, so the bar needs no icon font;
     # ttf-nerd-fonts-symbols is for yazi
     ttf-jetbrains-mono ttf-nerd-fonts-symbols
@@ -157,19 +162,22 @@ remove_old_packages() {
 }
 
 link_configs() {
-    chmod 755 ./.config/hypr/toggle_layout.sh ./.config/theme/theme-apply ./.config/theme/theme-popup ./link.sh ./usr/local/bin/* ./setup/*.sh
     # As the user, so they own the links
     sudo -H -u "$USER_NAME" ./link.sh
 }
 
 copy_system_files() {
-    # Generic files first, then this machine's (e.g. tlp.conf, udev rules)
+    # Generic files first, then this machine's (e.g. udev rules)
     cp -rv ./usr/. /usr/ && cp -rv ./etc/. /etc/ || return 1
     if [ -n "$HOST" ] && [ -d "./hosts/$HOST/etc" ]; then
         cp -rv "./hosts/$HOST/etc/." /etc/ || return 1
     else
         echo "No hosts/$HOST/etc, only generic system files copied"
     fi
+    # security-scan's "unowned" check skips the files installed from here
+    mkdir -p /etc/security-scan &&
+        find ./usr ./etc ${HOST:+"./hosts/$HOST/etc"} -type f 2>/dev/null |
+        sed -E 's#^\./hosts/[^/]+/#/#; s#^\./#/#' | sort > /etc/security-scan/expected || return 1
     udevadm control --reload && udevadm trigger -s power_supply
 }
 
