@@ -37,7 +37,7 @@ exec > >(tee -a "$LOG") 2>&1
 PACKAGES=(
     # Desktop
     pipewire-audio pipewire-pulse wireplumber pavucontrol swaync hyprlock hypridle
-    hyprshot hyprpicker hyprpolkitagent polkit lxappearance blueman impala udiskie
+    hyprshot hyprpicker hyprpolkitagent polkit blueman impala udiskie
     cliphist wl-clipboard brightnessctl tlp
     # Chinese input
     fcitx5-im fcitx5-rime fcitx5-chinese-addons fcitx5-pinyin-zhwiki fcitx5-configtool
