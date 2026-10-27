@@ -3,6 +3,7 @@
  * For GTK4 programs, which use CSS variables instead of @define-color. */
 :root {
   --primary: @primary@;
+  --primary-text: @primary_text@;
   --secondary: @secondary@;
   --on-secondary: @on_secondary@;
   --bg: @bg@;

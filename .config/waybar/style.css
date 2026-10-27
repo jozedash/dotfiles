@@ -47,6 +47,7 @@ window#waybar {
 #custom-battery,
 #custom-clipboard,
 #custom-colorpicker,
+#custom-theme,
 #custom-powerDraw,
 #custom-notification,
 #custom-updates,
@@ -76,6 +77,7 @@ window#waybar {
 #custom-battery,
 #custom-clipboard,
 #custom-colorpicker,
+#custom-theme,
 #custom-notification,
 #custom-updates,
 #custom-usb,
@@ -109,6 +111,7 @@ window#waybar {
 #temperature         { background-image: url("icons-current/temperature.svg"); }
 #custom-clipboard    { background-image: url("icons-current/clipboard.svg"); }
 #custom-colorpicker  { background-image: url("icons-current/colorpicker.svg"); }
+#custom-theme        { background-image: url("icons-current/palette.svg"); }
 #backlight           { background-image: url("icons-current/brightness.svg"); }
 
 #idle_inhibitor.activated   { background-image: url("icons-current/eye.svg"); }
@@ -180,7 +183,7 @@ window#waybar {
 }
 
 #clock{
-  color: @primary;
+  color: @primary_text;
 }
 
 #custom-battery.charging {

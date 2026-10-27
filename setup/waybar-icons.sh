@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 #
-# Regenerates .config/waybar/icons from papirus-icon-theme, recoloured to the bar
-# text colour. Papirus isn't needed at runtime, so install it only while running this:
-#   sudo pacman -S papirus-icon-theme && setup/waybar-icons.sh && sudo pacman -Rs papirus-icon-theme
+# Regenerates .config/waybar/icons from papirus-icon-theme (installed by
+# setup.sh; it's also the desktop icon theme), recoloured to the bar text colour.
 #
 # Usage: setup/waybar-icons.sh [papirus root] [out dir]
 set -e
@@ -37,6 +36,7 @@ put eye $s/actions/view-reveal-symbolic.svg
 put eye-off $s/actions/view-conceal-symbolic.svg
 put clipboard $s/actions/edit-paste-symbolic.svg
 put colorpicker $s/actions/color-select-symbolic.svg
+put palette $s/categories/applications-graphics-symbolic.svg
 put cpu $s/devices/cpu-symbolic.svg
 put memory $s/devices/memory-symbolic.svg
 put disk $s/devices/drive-harddisk-symbolic.svg

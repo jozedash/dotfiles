@@ -11,6 +11,7 @@ Archlinux dotfiles
 * [Setup terminal login](#setup-terminal-login-optional-cooler)
 * [Desktop config](#desktop-config)
 * [Basic apps, config, security](#basic-apps-fonts-and-security)
+* [Theme](#theme)
 * [Updates](#updates)
 * [Hibernate](#hibernate)
 * [Security scan](#security-scan)
@@ -127,6 +128,40 @@ It's safe to run again, e.g. after pulling changes. Output is logged to
 A failed system update stops it straight away, since installing packages on
 top would be a partial upgrade.
 
+### Theme
+
+All colours come from one theme: an accent pair (primary + secondary) and a
+dark or light mode. No third-party themes; GTK builds on stock Adwaita.
+
+* Click the palette icon on the bar for the picker: click one square for the
+  primary, then another for the secondary. Up to 3 favourite pairs (star the
+  current pair; right-click a favourite to remove it). Escape or clicking
+  elsewhere closes it.
+* Right-click the icon for the next favourite; middle-click, or Super+Shift+T,
+  toggles dark/light.
+* From a terminal: `~/.config/theme/theme-apply --pair '#ff00ff' '#8800ff'`,
+  `--mode light`, `--toggle-mode`, ... (`--help` lists them).
+
+Everything follows live: Hyprland borders, hyprlock, waybar, wofi, swaync,
+fcitx5, kitty, fastfetch, the wallpaper (cherry blossoms at Jiming Temple in
+light mode, Hongya Cave at night in dark; credits in
+`.config/hypr/wallpapers/CREDITS.md`), GTK apps (Thunar, file pickers), libadwaita apps, Qt apps
+(through `QT_QPA_PLATFORMTHEME=gtk3`), Firefox (dark/light), and the Papirus
+icons (dark/light). libadwaita apps show a new pair when next started.
+
+How it works: the choice is saved in `~/.local/state/dotfiles-theme/state.json`.
+`.config/theme/theme-apply` renders each program's colour file from
+`.config/theme/templates/` and tells running programs to reload. The GTK3
+theme is Adwaita's own CSS recoloured to our palette, under a new
+`~/.local/share/themes/Hypr-*` name each time (GTK3 only restyles running apps
+when the name changes). Dark mode follows VS Code's dark greys; the palettes
+and terminal colours are in `.config/theme/theme.py`, the picker's squares in
+`.config/theme/palette.json`.
+
+To theme another program: add a template using `@primary@`-style
+placeholders (see `palette()` in `theme.py` for the names), a `Target` line
+in `theme-apply`, and its reload command in `RELOADS`.
+
 ### Hibernate
 
 * Super+Shift+H (or `systemctl hibernate`) hibernates now. Save your work first: if resuming
@@ -189,7 +224,7 @@ To scan now: `sudo systemctl start security-scan.service`, then
 
 | Path | What | Installed by |
 |---|---|---|
-| `.config/`, `.local/share/`, `.bash_profile` | User config, generic | Linked into `~` by `link.sh` |
+| `.config/`, `.bash_profile` | User config, generic | Linked into `~` by `link.sh` |
 | `etc/`, `usr/` | System config, generic | Copied by `setup.sh` |
 | `hosts/<model>/` | Settings for one machine, named after `/sys/class/dmi/id/product_version` with spaces as `-` | `~/.config/dotfiles-host` links here; `hosts/<model>/etc/` is copied after `etc/` |
 | `setup/` | Helper scripts (hibernation, regenerating the waybar icons) | `setup.sh` |
@@ -207,6 +242,8 @@ simply hidden, and `toggle_layout.sh` uses its built-in defaults.
 | Long Life on/off | Stored in the laptop's firmware | Battery icon click |
 | `~/.local/state/hypr/layouts/` | Remembered layout per monitor setup | `toggle_layout.sh` |
 | `fcitx5/conf/cached_layouts`, pinyin user dictionary | Generated cache, personal typing history | fcitx5 (`.gitignore`) |
+| `~/.local/state/dotfiles-theme/state.json` | Chosen accent pair, mode and favourites | `~/.config/theme/theme-apply` |
+| Colour files (`waybar/colors.css`, `wofi/style.css`, `hypr/colors.lua`, ...), `~/.local/share/fcitx5/themes/hypr/`, the GTK3 theme `~/.local/share/themes/Hypr-*`, `~/.config/gtk-{3,4}.0/` settings and CSS, `~/.config/fastfetch/config.jsonc` | Generated from `.config/theme/templates/` for the current theme | `theme-apply`, also run by `link.sh` (`.gitignore`) |
 | `/var/lib/iwd/*.psk` | Wifi passwords | `impala` (or `iwctl`) |
 | `/var/lib/pacman-download/` | Runtime state | Update timer |
 | `/var/lib/security-scan/` | Last scan's findings and report | Security scan timer |

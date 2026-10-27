@@ -1,0 +1,71 @@
+/* GTK3 (Thunar, file pickers, blueman, ...). theme-apply builds the GTK3
+ * theme (~/.local/share/themes/Hypr-<mode>-<hash>/gtk-3.0/gtk.css) from
+ * built-in Adwaita recoloured to our palette, the colour definitions and
+ * this file; edit this file, then run ~/.config/theme/theme-apply.
+ *
+ * Recolouring turns Adwaita's blue into the secondary and its greys into
+ * ours. This file adds what recolouring can't: the primary colour (Adwaita
+ * has only one accent) and Thunar tweaks. */
+
+/* Public named colours, for apps that use them in their own CSS */
+@define-color theme_bg_color @bg_opaque;
+@define-color theme_fg_color @fg;
+@define-color theme_base_color @base;
+@define-color theme_text_color @fg;
+@define-color theme_selected_bg_color @secondary;
+@define-color theme_selected_fg_color @on_secondary;
+@define-color theme_unfocused_bg_color @bg_opaque;
+@define-color theme_unfocused_fg_color @fg;
+@define-color theme_unfocused_base_color @base;
+@define-color theme_unfocused_text_color @fg;
+@define-color theme_unfocused_selected_bg_color @secondary;
+@define-color theme_unfocused_selected_fg_color @on_secondary;
+@define-color insensitive_fg_color @fg_disabled;
+@define-color borders @muted;
+@define-color unfocused_borders @muted;
+
+/* ---- Primary: focus and hover ---- */
+
+*:focus {
+  outline-color: alpha(@primary, 0.6);
+}
+
+entry:focus,
+spinbutton:focus:not(.vertical) {
+  border-color: @primary;
+  box-shadow: inset 0 0 0 1px @primary;
+}
+
+button:hover:not(:checked):not(:active) {
+  border-color: @primary;
+}
+
+scrollbar slider:hover {
+  background-color: @primary;
+}
+
+rubberband,
+.rubberband,
+treeview.view rubberband,
+iconview rubberband,
+flowbox rubberband {
+  border: 1px solid @primary;
+  background-color: alpha(@primary, 0.2);
+}
+
+menu,
+.menu,
+.context-menu,
+popover.background {
+  border: 1px solid @primary;
+}
+
+/* ---- Thunar ---- */
+
+/* Side pane in the panel grey, like the bar, against the darker file view */
+.thunar placessidebar,
+.thunar placessidebar list,
+.thunar .sidebar,
+.thunar .sidebar .view:not(:selected) {
+  background-color: @bg_opaque;
+}

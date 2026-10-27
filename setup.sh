@@ -44,15 +44,19 @@ PACKAGES=(
     # Apps
     thunar yazi fastfetch gnome-text-editor gnome-keyring keepassxc thunderbird
     libreoffice-still kid3 vlc-plugin-dvb btop htop
-    # Command line tools (several are yazi previewers)
+    # Command line tools (several are yazi previewers; theme-apply uses resvg)
     unzip 7zip jq poppler fd ripgrep fzf zoxide resvg imagemagick ffmpeg
     # Phones and drives
     libimobiledevice usbmuxd ifuse ntfs-3g exfatprogs
     # Security and updates
     ufw rkhunter arch-audit pacman-contrib
+    # Theme (.config/theme): Adwaita-dark, the icon theme, GTK for theme-apply
+    # and the popup, which sits under the bar via gtk-layer-shell, and
+    # hyprpaper for the mode's wallpaper
+    gnome-themes-extra papirus-icon-theme python-gobject gtk-layer-shell hyprpaper
     # Fonts. Waybar icons are SVGs in the repo, so the bar needs no icon font;
     # ttf-nerd-fonts-symbols is for yazi
-    gnome-themes-extra ttf-jetbrains-mono ttf-nerd-fonts-symbols
+    ttf-jetbrains-mono ttf-nerd-fonts-symbols
     adobe-source-han-sans-cn-fonts ttf-dejavu gnu-free-fonts noto-fonts
 )
 
@@ -153,7 +157,7 @@ remove_old_packages() {
 }
 
 link_configs() {
-    chmod 755 ./.config/hypr/toggle_layout.sh ./.config/theme/theme-apply ./link.sh ./usr/local/bin/* ./setup/*.sh
+    chmod 755 ./.config/hypr/toggle_layout.sh ./.config/theme/theme-apply ./.config/theme/theme-popup ./link.sh ./usr/local/bin/* ./setup/*.sh
     # As the user, so they own the links
     sudo -H -u "$USER_NAME" ./link.sh
 }

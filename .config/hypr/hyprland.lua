@@ -52,7 +52,10 @@ local browser = "firefox"
 hl.on("hyprland.start", function()
     hl.exec_cmd(".config/hypr/toggle_layout.sh")
     hl.exec_cmd(terminal)
-    hl.exec_cmd("waybar & hyprpaper & firefox")
+    -- Theme first: writes the colour files and sets the GSettings (dark/light,
+    -- GTK theme) in this session, so the bar and Firefox start themed.
+    -- link.sh runs it too, but under sudo there's no session to set them in.
+    hl.exec_cmd("~/.config/theme/theme-apply --no-reload; waybar & hyprpaper & firefox")
     hl.exec_cmd("hypridle")
     hl.exec_cmd("systemctl --user start pipewire")
     hl.exec_cmd("systemctl --user start wireplumber")
@@ -92,6 +95,10 @@ hl.env("HYPRCURSOR_SIZE", "24")
 hl.env("QT_IM_MODULE", "fcitx")
 hl.env("XMODIFIERS", "@im=fcitx")
 
+-- Qt apps take their palette from our GTK theme (light/dark and accents),
+-- and follow theme changes live. No Qt theme to install.
+hl.env("QT_QPA_PLATFORMTHEME", "gtk3")
+
 -----------------------
 ----- PERMISSIONS -----
 -----------------------
@@ -117,6 +124,11 @@ hl.env("XMODIFIERS", "@im=fcitx")
 
 -- Refer to https://wiki.hypr.land/Configuring/Basics/Variables/
 
+local ok, border_colors = pcall(dofile, os.getenv("HOME") .. "/.config/hypr/colors.lua")
+if not ok then
+    border_colors = nil
+end
+
 hl.config({
     general = {
         gaps_in = 2.5,
@@ -124,11 +136,9 @@ hl.config({
 
         border_size = 2,
 
-        -- https://wiki.hypr.land/Configuring/Basics/Variables/#variable-types for info about colors
-        col = {
-            active_border = { colors = { "rgba(ff00ffee)", "rgba(8800ffee)" }, angle = 45 },
-            inactive_border = "rgba(595959aa)",
-        },
+        -- Border colours follow the theme: colors.lua is written by
+        -- ~/.config/theme/theme-apply. If it's missing, Hyprland's defaults apply.
+        col = border_colors,
 
         -- Set to true to enable resizing windows by clicking and dragging on borders and gaps
         resize_on_border = false,
@@ -301,6 +311,7 @@ hl.bind(mainMod .. " + SHIFT + H", hl.dsp.exec_cmd("systemctl hibernate"))
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("hyprshot -m region"))
 hl.bind(mainMod .. " + U", hl.dsp.exec_cmd("kitty -e .config/waybar/scripts/upgrade.sh"))
 hl.bind(mainMod .. " + SHIFT + U", hl.dsp.exec_cmd("udiskie-umount --all"))
+hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd("~/.config/theme/theme-apply --toggle-mode"))
 
 -- Move focus with mainMod + arrow keys
 hl.bind(mainMod .. " + left", hl.dsp.focus({ direction = "left" }))

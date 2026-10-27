@@ -4,7 +4,7 @@
   "include": ["~/.config/dotfiles-host/waybar.jsonc"],
   "modules-left": ["custom/logo", "clock",  "custom/weather", "disk", "memory", "cpu", "temperature", "custom/powerDraw", "hyprland/window" ],
   "modules-center": ["hyprland/workspaces"],
-  "modules-right": ["custom/updates", "tray", "custom/usb", "custom/notification", "custom/clipboard", "backlight", "idle_inhibitor", "custom/colorpicker", "bluetooth", "pulseaudio", "network", "custom/battery" ],
+  "modules-right": ["custom/updates", "tray", "custom/usb", "custom/notification", "custom/clipboard", "backlight", "idle_inhibitor", "custom/colorpicker", "custom/theme", "bluetooth", "pulseaudio", "network", "custom/battery" ],
   "reload_style_on_change":true,
 
   // Icons are SVGs drawn by style.css (see icons/), so formats only hold text.
@@ -108,6 +108,19 @@
     "exec": "~/.config/waybar/scripts/colorpicker.sh -j",
     "on-click": "sleep 1 && ~/.config/waybar/scripts/colorpicker.sh",
     "signal": 1
+  },
+
+  // Theme switcher: palette popup, favourites, dark/light (see ~/.config/theme).
+  // theme-apply sends signal 11 on every change, which re-runs exec.
+  "custom/theme": {
+    "format": "{}",
+    "return-type": "json",
+    "interval": "once",
+    "signal": 11,
+    "exec": "~/.config/waybar/scripts/theme.sh",
+    "on-click": "~/.config/theme/theme-popup",
+    "on-click-right": "~/.config/theme/theme-apply --cycle-favourite",
+    "on-click-middle": "~/.config/theme/theme-apply --toggle-mode"
   },
 
   "cpu": {

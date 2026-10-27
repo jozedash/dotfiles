@@ -8,14 +8,14 @@
    version="1.1"
    id="svg1"
    inkscape:version="1.4.4 (dcaf3e7d9e, 2026-05-05)"
-   sodipodi:docname="prev.svg"
+   sodipodi:docname="next.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
   <sodipodi:namedview
      id="namedview1"
-     pagecolor="#d8dee9"
+     pagecolor="@fg@"
      bordercolor="#000000"
      borderopacity="0.25"
      inkscape:showpageshadow="2"
@@ -51,8 +51,8 @@
      inkscape:groupmode="layer"
      id="layer1">
     <path
-       style="fill:#d8dee9;stroke-width:0.529167"
-       d="m 2.9104167,4.2333334 -1.5875,-1.5875 1.5875,-1.5875001 z"
+       style="fill:@fg@;stroke-width:0.529167"
+       d="m 1.3229167,1.0583333 1.5875,1.5875 -1.5875,1.5875001 z"
        id="path1"
        sodipodi:nodetypes="cccc" />
   </g>

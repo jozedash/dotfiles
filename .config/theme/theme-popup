@@ -1,0 +1,333 @@
+#!/usr/bin/env python3
+"""The theme popup, opened from waybar's palette icon.
+
+Click a colour for the primary, then another for the secondary: the pair
+applies straight away. The bottom row has up to three favourites (click to
+apply, right-click to remove) and the current pair with a star to favourite
+it. Escape cancels a half-picked pair, or closes; so does clicking elsewhere.
+Running it again while it's open closes it (waybar's click toggles it).
+
+All changes go through theme-apply; the popup only reads the state.
+"""
+
+import json
+import os
+import signal
+import subprocess
+import sys
+from pathlib import Path
+
+import gi
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+gi.require_version("GtkLayerShell", "0.1")
+from gi.repository import Gdk, GLib, Gtk, GtkLayerShell  # noqa: E402
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+sys.dont_write_bytecode = True  # no __pycache__ in the repo
+import theme  # noqa: E402
+
+THEME_APPLY = HERE / "theme-apply"
+PALETTE = json.loads((HERE / "palette.json").read_text())["rows"]
+PIDFILE = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / "theme-popup.pid"
+
+# Shape and spacing; colours are filled in from the theme on every refresh
+CSS = """
+window { background: transparent; }
+#popup {
+  background-color: %(bg)s;
+  border: 2px solid %(primary)s;
+  border-radius: 15px;
+  padding: 12px;
+  color: %(fg)s;
+}
+button.swatch, button.pair {
+  padding: 0;
+  background-image: none;
+  box-shadow: none;
+  text-shadow: none;
+}
+button.swatch {
+  min-width: 26px;
+  min-height: 26px;
+  border-radius: 6px;
+  border: 2px solid transparent;
+}
+button.swatch:hover { border-color: %(fg)s; }
+button.swatch.pending { border-color: %(fg)s; box-shadow: inset 0 0 0 2px %(bg_opaque)s; }
+button.pair {
+  border-radius: 8px;
+  border: 2px solid %(muted)s;
+  background-color: transparent;
+}
+button.pair:hover { border-color: %(primary)s; }
+button.pair.empty { border-style: dashed; }
+button.pair .half { min-width: 22px; min-height: 26px; }
+button.pair .half.left { border-radius: 6px 0 0 6px; }
+button.pair .half.right { border-radius: 0 6px 6px 0; }
+button.pair .half.unknown { color: %(fg)s; font-weight: bold; }
+button.star { padding: 0 6px; background-image: none; box-shadow: none; }
+.mode button:checked {
+  background-image: none;
+  background-color: %(secondary)s;
+  color: %(on_secondary)s;
+}
+.hint { color: %(fg_disabled)s; }
+"""
+
+
+def toggle_single_instance():
+    """If a popup is already open, close it and exit; otherwise record ours."""
+    try:
+        pid = int(PIDFILE.read_text())
+        if Path(f"/proc/{pid}/cmdline").read_bytes().find(b"theme-popup") != -1:
+            os.kill(pid, signal.SIGTERM)
+            sys.exit(0)
+    except (OSError, ValueError):
+        pass
+    PIDFILE.write_text(str(os.getpid()))
+
+
+class Popup(Gtk.Window):
+    def __init__(self):
+        super().__init__()
+        self.pending = None     # primary picked, waiting for the secondary
+        self.applying = False
+        self.updating = False   # set while refresh() moves the mode toggles
+        self.css = Gtk.CssProvider()
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(), self.css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        GtkLayerShell.init_for_window(self)
+        GtkLayerShell.set_namespace(self, "theme-popup")
+        GtkLayerShell.set_layer(self, GtkLayerShell.Layer.TOP)
+        # Top right, under the bar (the bar's exclusive zone keeps us below it)
+        for edge, margin in ((GtkLayerShell.Edge.TOP, 4), (GtkLayerShell.Edge.RIGHT, 8)):
+            GtkLayerShell.set_anchor(self, edge, True)
+            GtkLayerShell.set_margin(self, edge, margin)
+        # On-demand: Hyprland focuses us on open (so Escape works), and
+        # clicking another window takes the focus, which closes us
+        GtkLayerShell.set_keyboard_mode(self, GtkLayerShell.KeyboardMode.ON_DEMAND)
+        visual = self.get_screen().get_rgba_visual()
+        if visual:
+            self.set_visual(visual)  # for the rounded, translucent panel
+
+        self.connect("key-press-event", self.on_key)
+        self.connect("focus-out-event", lambda *_: self.close())
+        self.connect("destroy", Gtk.main_quit)
+
+        outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10, name="popup")
+        self.add(outer)
+
+        mode_row = Gtk.Box(spacing=8)
+        mode_row.pack_start(Gtk.Label(label="Mode"), False, False, 0)
+        modes = Gtk.Box(spacing=0)
+        modes.get_style_context().add_class("linked")
+        modes.get_style_context().add_class("mode")
+        self.mode_buttons = {}
+        for mode in ("dark", "light"):
+            button = Gtk.ToggleButton(label=mode.capitalize())
+            button.connect("toggled", self.on_mode, mode)
+            modes.pack_start(button, False, False, 0)
+            self.mode_buttons[mode] = button
+        mode_row.pack_end(modes, False, False, 0)
+        outer.pack_start(mode_row, False, False, 0)
+
+        grid = Gtk.Grid(row_spacing=4, column_spacing=4)
+        self.swatches = {}
+        for y, row in enumerate(PALETTE):
+            for x, colour in enumerate(row):
+                colour = theme.normalise(colour)
+                button = Gtk.Button(name="c" + colour[1:], tooltip_text=colour)
+                button.get_style_context().add_class("swatch")
+                button.connect("clicked", self.on_swatch, colour)
+                grid.attach(button, x, y, 1, 1)
+                self.swatches[colour] = button
+        outer.pack_start(grid, False, False, 0)
+
+        self.hint = Gtk.Label(xalign=0)
+        self.hint.get_style_context().add_class("hint")
+        outer.pack_start(self.hint, False, False, 0)
+
+        bottom = Gtk.Box(spacing=6)
+        self.favourite_buttons = []
+        for i in range(theme.MAX_FAVOURITES):
+            button = Gtk.Button()
+            button.get_style_context().add_class("pair")
+            button.connect("clicked", self.on_favourite, i)
+            button.connect("button-press-event", self.on_favourite_press, i)
+            bottom.pack_start(button, False, False, 0)
+            self.favourite_buttons.append(button)
+        self.star = Gtk.Button()
+        self.star.get_style_context().add_class("star")
+        self.star.connect("clicked", self.on_star)
+        bottom.pack_end(self.star, False, False, 0)
+        self.current = Gtk.Button(tooltip_text="Current pair")
+        self.current.get_style_context().add_class("pair")
+        bottom.pack_end(self.current, False, False, 0)
+        outer.pack_start(bottom, False, False, 0)
+
+        self.refresh()
+        self.show_all()
+
+    # ---- Display ----
+
+    def pair_contents(self, button, primary, secondary):
+        """Fill a pair button with two halves. A primary without a secondary
+        (half picked) shows '?'; neither is an empty slot."""
+        for child in button.get_children():
+            button.remove(child)
+        box = Gtk.Box(spacing=0)
+        for side, colour in (("left", primary), ("right", secondary)):
+            half = Gtk.Label(label="?" if colour is None and primary else "")
+            if colour:
+                half.set_name("c" + colour[1:])
+            style = half.get_style_context()
+            style.add_class("half")
+            style.add_class(side)
+            if colour is None and primary:
+                style.add_class("unknown")
+            box.pack_start(half, False, False, 0)
+        button.add(box)
+        button.show_all()
+
+    def refresh(self):
+        self.state = theme.load_state()
+        values = theme.palette(self.state)
+        pair, favourites = self.state["pair"], self.state["favourites"]
+
+        colours = set(self.swatches) | {pair["primary"], pair["secondary"]}
+        colours |= {c for fav in favourites for c in fav.values()}
+        css = CSS % values + "".join(
+            f"#c{c[1:]} {{ background-color: {c}; }}\n" for c in sorted(colours))
+        self.css.load_from_data(css.encode())
+
+        self.updating = True
+        for mode, button in self.mode_buttons.items():
+            button.set_active(mode == self.state["mode"])
+        self.updating = False
+
+        for colour, button in self.swatches.items():
+            style = button.get_style_context()
+            (style.add_class if colour == self.pending else style.remove_class)("pending")
+
+        if self.pending:
+            self.pair_contents(self.current, self.pending, None)
+            self.hint.set_text("Now pick the secondary (Esc cancels)")
+        else:
+            self.pair_contents(self.current, pair["primary"], pair["secondary"])
+            self.hint.set_text("Pick a primary, then a secondary")
+
+        for i, button in enumerate(self.favourite_buttons):
+            style = button.get_style_context()
+            if i < len(favourites):
+                fav = favourites[i]
+                self.pair_contents(button, fav["primary"], fav["secondary"])
+                button.set_tooltip_text(f"{fav['primary']} / {fav['secondary']}\n"
+                                        "Click to use, right-click to remove")
+                button.set_sensitive(True)
+                style.remove_class("empty")
+            else:
+                self.pair_contents(button, None, None)
+                button.set_tooltip_text("Empty: star a pair to keep it here")
+                button.set_sensitive(False)
+                style.add_class("empty")
+
+        is_favourite = pair in favourites
+        full = len(favourites) >= theme.MAX_FAVOURITES
+        self.star.set_label("★" if is_favourite else "☆")
+        self.star.set_sensitive(not self.pending and (is_favourite or not full))
+        self.star.set_tooltip_text(
+            "Unfavourite" if is_favourite
+            else "Unfavourite one first" if full else "Favourite this pair")
+
+    # ---- Actions ----
+
+    def apply(self, *args):
+        """Run theme-apply with these flags, then show the new state."""
+        if self.applying:
+            return
+        self.applying = True
+        process = subprocess.Popen([str(THEME_APPLY), *args])
+
+        def done(pid, status):
+            self.applying = False
+            if status:
+                print(f"theme-popup: theme-apply {' '.join(args)} failed", file=sys.stderr)
+            self.refresh()
+
+        GLib.child_watch_add(GLib.PRIORITY_DEFAULT, process.pid, done)
+
+    def on_swatch(self, button, colour):
+        if self.pending is None:
+            self.pending = colour
+            self.refresh()
+        else:
+            primary, self.pending = self.pending, None
+            self.refresh()
+            self.apply("--pair", primary, colour)
+
+    def on_mode(self, button, mode):
+        if self.updating:
+            return
+        if not button.get_active():
+            # A toggle can't be switched off by clicking it: keep it on
+            if mode == self.state["mode"]:
+                self.updating = True
+                button.set_active(True)
+                self.updating = False
+            return
+        self.apply("--mode", mode)
+
+    def on_favourite(self, button, i):
+        fav = self.state["favourites"][i]
+        self.pending = None
+        self.apply("--pair", fav["primary"], fav["secondary"])
+
+    def on_favourite_press(self, button, event, i):
+        if event.button == 3 and i < len(self.state["favourites"]):
+            fav = self.state["favourites"][i]
+            self.apply("--unfavourite", fav["primary"], fav["secondary"])
+            return True
+        return False
+
+    def on_star(self, button):
+        self.apply("--unfavourite" if self.state["pair"] in self.state["favourites"]
+                   else "--favourite")
+
+    def on_key(self, widget, event):
+        if event.keyval == Gdk.KEY_Escape:
+            if self.pending:
+                self.pending = None
+                self.refresh()
+            else:
+                self.close()
+            return True
+        return False
+
+
+def main():
+    toggle_single_instance()
+    # Another launch closes us with SIGTERM (see toggle_single_instance)
+    try:
+        gi.require_version("GLibUnix", "2.0")
+        from gi.repository import GLibUnix
+        signal_add = GLibUnix.signal_add
+    except (ImportError, ValueError):  # older GLib
+        signal_add = GLib.unix_signal_add
+    signal_add(GLib.PRIORITY_DEFAULT, signal.SIGTERM, Gtk.main_quit)
+    try:
+        Popup()
+        Gtk.main()
+    finally:
+        try:
+            if PIDFILE.read_text() == str(os.getpid()):
+                PIDFILE.unlink()
+        except OSError:
+            pass
+
+
+if __name__ == "__main__":
+    main()

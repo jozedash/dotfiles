@@ -2,20 +2,20 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="24"
-   height="24"
-   viewBox="0 0 6.3500001 6.3500001"
+   width="6"
+   height="12"
+   viewBox="0 0 1.5875 3.175"
    version="1.1"
    id="svg1"
    inkscape:version="1.4.4 (dcaf3e7d9e, 2026-05-05)"
-   sodipodi:docname="radio.svg"
+   sodipodi:docname="arrow.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
   <sodipodi:namedview
      id="namedview1"
-     pagecolor="#d8dee9"
+     pagecolor="@fg@"
      bordercolor="#000000"
      borderopacity="0.25"
      inkscape:showpageshadow="2"
@@ -50,11 +50,10 @@
      inkscape:label="图层 1"
      inkscape:groupmode="layer"
      id="layer1">
-    <circle
-       style="fill:#d8dee9;fill-opacity:1;stroke:none;stroke-width:0.354518;stroke-opacity:1"
-       id="path3"
-       cx="3.175"
-       cy="3.175"
-       r="1.0583334" />
+    <path
+       style="fill:@fg@;stroke-width:0.529167"
+       d="M 0,0 1.5875,1.5875 0,3.1750001 Z"
+       id="path1"
+       sodipodi:nodetypes="cccc" />
   </g>
 </svg>

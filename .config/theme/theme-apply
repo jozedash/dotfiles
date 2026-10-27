@@ -10,11 +10,13 @@ from theme.palette()), a line in TARGETS, and its reload command in RELOADS.
 """
 
 import argparse
+import hashlib
 import re
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import NamedTuple
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -22,22 +24,71 @@ sys.dont_write_bytecode = True  # no __pycache__ in the repo
 import theme  # noqa: E402
 
 CONFIG = Path.home() / ".config"
+FCITX5_THEME = Path.home() / ".local/share/fcitx5/themes/hypr"
+GTK_THEMES = Path.home() / ".local/share/themes"
+OUR_GTK_THEME = re.compile(r"Hypr-(dark|light)-[0-9a-f]{8}")
 
-# (template, output, file appended after the rendered template or None).
-# Skipped when the output's directory doesn't exist, i.e. that config isn't
-# linked on this machine. wofi loads its style as data, so relative @imports
-# break there: its style.css is the colours followed by its base.css.
+
+class Target(NamedTuple):
+    template: str
+    output: Path
+    append: Path = None  # file added after the rendered template
+    needs: Path = None   # skip unless this exists (default: output's directory)
+
+
+# A target is skipped when its config isn't linked on this machine. wofi loads
+# its style as data, so relative @imports break there: its style.css is the
+# colours followed by its base.css. The fcitx5 theme is generated whole; its
+# backgrounds are drawn as SVG but written as PNG (a .png output of an SVG
+# template is rasterised), because fcitx5 doesn't load an SVG highlight.
 TARGETS = [
-    ("gtk3-colors.css.in", CONFIG / "waybar/colors.css", None),
-    ("gtk3-colors.css.in", CONFIG / "wofi/style.css", CONFIG / "wofi/base.css"),
-    ("css-vars.css.in", CONFIG / "swaync/colors.css", None),
+    Target("gtk3-colors.css.in", CONFIG / "waybar/colors.css"),
+    Target("gtk3-colors.css.in", CONFIG / "wofi/style.css", append=CONFIG / "wofi/base.css"),
+    Target("css-vars.css.in", CONFIG / "swaync/colors.css"),
+    Target("hypr-colors.lua.in", CONFIG / "hypr/colors.lua"),
+    Target("hyprlock-colors.conf.in", CONFIG / "hypr/colors.conf"),
+    Target("hyprpaper-wallpaper.conf.in", CONFIG / "hypr/wallpaper.conf"),
+    Target("kitty-colors.conf.in", CONFIG / "kitty/colors.conf"),
+    # fastfetch isn't linked (it has no config of its own); it reads this on every run
+    Target("fastfetch.jsonc.in", CONFIG / "fastfetch/config.jsonc", needs=CONFIG),
+] + [
+    Target(f"fcitx5/{name}.in", FCITX5_THEME / name, needs=CONFIG / "fcitx5")
+    for name in ("theme.conf", "arrow.svg", "prev.svg", "next.svg", "radio.svg")
+] + [
+    Target(f"fcitx5/{name}.svg.in", FCITX5_THEME / f"{name}.png", needs=CONFIG / "fcitx5")
+    for name in ("panel", "highlight")
+] + [
+    # GTK itself is always there. The GTK3 theme is written by update_gtk3_theme.
+    Target("gtk/gtk3-settings.ini.in", CONFIG / "gtk-3.0/settings.ini", needs=CONFIG),
+    Target("css-vars.css.in", CONFIG / "gtk-4.0/gtk.css",
+           append=HERE / "templates/gtk/gtk4.css", needs=CONFIG),
+    Target("gtk/gtk4-settings.ini.in", CONFIG / "gtk-4.0/settings.ini", needs=CONFIG),
 ]
 
-# (process name, command): run only while that process is running. wofi
-# reads its style on every launch, so it needs nothing.
+
+
+# GSettings for GTK and the colour scheme. On Wayland these win over
+# settings.ini, and changing them is what makes running apps restyle.
+GSETTINGS = [("gtk-theme", "gtk_theme"), ("icon-theme", "icon_theme"),
+             ("color-scheme", "color_scheme")]
+
+# (process name, command): run only while that process is running. Commands
+# can use @name@ placeholders like templates. wofi
+# and hyprlock read their config on every launch, so they need nothing.
+# Hyprland gets the new border colours through Lua rather than a reload,
+# which would also restart waybar (via toggle_layout.sh apply).
 RELOADS = [
-    ("waybar", ["pkill", "-SIGUSR2", "-x", "waybar"]),
+    # waybar reloads its style by itself when colors.css changes; a full
+    # reload (SIGUSR2) would also take keyboard focus from the theme popup.
+    # Signal 11 only re-runs custom/theme for its tooltip.
+    ("waybar", ["pkill", "-RTMIN+11", "-x", "waybar"]),
     ("swaync", ["swaync-client", "-rs"]),
+    ("fcitx5", ["fcitx5-remote", "-r"]),
+    ("kitty", ["pkill", "-SIGUSR1", "-x", "kitty"]),  # every kitty re-reads its config
+    ("hyprpaper", ["hyprctl", "hyprpaper", "wallpaper",
+                   f", {CONFIG}/hypr/wallpapers/@mode@.jpg, cover"]),
+    ("Hyprland", ["hyprctl", "eval",
+                  'hl.config({ general = { col = dofile(os.getenv("HOME") .. "/.config/hypr/colors.lua") } })']),
 ]
 
 # Waybar's icons are drawn in the dark-mode text colour (setup/waybar-icons.sh)
@@ -60,13 +111,19 @@ def render(template, values):
     return PLACEHOLDER.sub(sub, text)
 
 
-def write_if_changed(path, text):
+def write_if_changed(path, data):
     try:
-        if path.read_text() == text:
+        if (path.read_bytes() if isinstance(data, bytes) else path.read_text()) == data:
             return
     except OSError:
         pass
-    theme.write_atomic(path, text)
+    theme.write_atomic(path, data)
+
+
+def rasterise(svg):
+    """SVG text -> PNG bytes, for programs that can't use SVG everywhere."""
+    return subprocess.run(["resvg", "-", "-c"], input=svg.encode(),
+                          capture_output=True, check=True).stdout
 
 
 def update_icons(values):
@@ -91,10 +148,77 @@ def update_icons(values):
     tmp.replace(link)
 
 
-def reload():
+# Adwaita 3.24 has ~175-185 accent-coloured values; far fewer means its colours
+# changed and the recolouring is only partial.
+MIN_ACCENTS = 50
+
+
+def warn(message):
+    """To stderr and, when there's a desktop, as a notification."""
+    print(f"theme-apply: {message}", file=sys.stderr)
+    if shutil.which("notify-send"):
+        subprocess.run(["notify-send", "-a", "Theme", "Theme", message], capture_output=True)
+
+
+def adwaita_css(name):
+    """Built-in GTK3 Adwaita's compiled CSS, from libgtk's resources."""
+    import gi
+    gi.require_version("Gtk", "3.0")
+    from gi.repository import Gio, Gtk  # noqa: F401 (importing Gtk registers them)
+    return Gio.resources_lookup_data(f"/org/gtk/libgtk/theme/Adwaita/{name}", 0).get_data().decode()
+
+
+def update_gtk3_theme(values):
+    """Write our GTK3 theme: Adwaita recoloured, our colour definitions, then
+    templates/gtk/gtk3.css for what recolouring can't do. Sets
+    values["gtk_theme"], its name.
+
+    GTK3 only re-reads a theme when its name changes, so the name carries a
+    hash of the contents: any change (pair, mode, palette, gtk3.css) is a new
+    theme, and running apps restyle live.
+
+    If Adwaita can't be read or recoloured (a GTK update moved or changed it),
+    warn and fall back to importing plain Adwaita, so the rest of theme-apply
+    still runs and GTK apps keep our accents from gtk3.css."""
+    try:
+        adwaita, accents = theme.recolour_adwaita(adwaita_css(values["adwaita_css"]), values)
+        if accents < MIN_ACCENTS:
+            warn(f"GTK theme: only {accents} accent colours recoloured, Adwaita may have "
+                 "changed (see recolour_adwaita in ~/.config/theme/theme.py)")
+    except Exception as e:  # anything from gi, the resource lookup or the parsing
+        warn(f"GTK theme: couldn't recolour Adwaita ({e}); using plain Adwaita")
+        adwaita = f'@import url("resource:///org/gtk/libgtk/theme/Adwaita/{values["adwaita_css"]}");\n'
+    body = (adwaita + "\n" + render("gtk3-colors.css.in", values)
+            + "\n" + (HERE / "templates/gtk/gtk3.css").read_text())
+    digest = hashlib.sha256(body.encode()).hexdigest()[:8]
+    values["gtk_theme"] = f"Hypr-{values['mode']}-{digest}"
+    css = render("gtk/gtk3-header.css.in", values) + body
+    write_if_changed(GTK_THEMES / values["gtk_theme"] / "gtk-3.0/gtk.css", css)
+
+
+def update_gsettings(values):
+    """Set the GSettings that differ, then delete our GTK themes that are no
+    longer in use. Done even with --no-reload: they're settings, not reloads.
+    Without a session bus (e.g. under sudo) gsettings fails; that's fine."""
+    if not shutil.which("gsettings"):
+        return
+    schema = "org.gnome.desktop.interface"
+    for key, name in GSETTINGS:
+        current = subprocess.run(["gsettings", "get", schema, key],
+                                 capture_output=True, text=True).stdout.strip()
+        if current != f"'{values[name]}'":
+            subprocess.run(["gsettings", "set", schema, key, values[name]], capture_output=True)
+    if GTK_THEMES.is_dir():
+        for old in GTK_THEMES.iterdir():
+            if OUR_GTK_THEME.fullmatch(old.name) and old.name != values["gtk_theme"]:
+                shutil.rmtree(old)
+
+
+def reload(values):
     for name, command in RELOADS:
         if subprocess.run(["pgrep", "-x", name], capture_output=True).returncode != 0:
             continue
+        command = [PLACEHOLDER.sub(lambda m: values[m.group(1)], arg) for arg in command]
         if not shutil.which(command[0]):
             continue
         try:
@@ -160,15 +284,19 @@ def main():
     theme.save_state(state)
 
     values = theme.palette(state)
-    for template, output, append in TARGETS:
-        if output.parent.is_dir():
-            text = render(template, values)
-            if append:
-                text += "\n" + append.read_text()
-            write_if_changed(output, text)
+    update_gtk3_theme(values)  # first: settings.ini below needs its name
+    for target in TARGETS:
+        if (target.needs or target.output.parent).is_dir():
+            text = render(target.template, values)
+            if target.append:
+                text += "\n" + target.append.read_text()
+            if target.output.suffix == ".png":
+                text = rasterise(text)
+            write_if_changed(target.output, text)
     update_icons(values)
+    update_gsettings(values)
     if not args.no_reload:
-        reload()
+        reload(values)
 
 
 if __name__ == "__main__":

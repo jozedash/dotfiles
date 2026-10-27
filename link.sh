@@ -12,7 +12,7 @@
 # Paths relative to both the repo root and $HOME
 LINKS=(.bash_profile .config/hypr .config/waybar .config/wofi .config/fcitx5
     .config/swaync .config/udiskie .config/fontconfig .config/systemd/user
-    .local/share/fcitx5/themes/hypr .config/theme)
+    .config/theme .config/kitty)
 
 REPO=$(cd "$(dirname "$0")" && pwd)
 STAMP=$(date '+%Y-%m-%d_%H:%M:%S')

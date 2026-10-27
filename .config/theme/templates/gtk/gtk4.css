@@ -1,0 +1,36 @@
+/* GTK4 and libadwaita (gnome-text-editor, ...). Appended to the colour
+ * variables by theme-apply to make ~/.config/gtk-4.0/gtk.css; edit this
+ * file, then run ~/.config/theme/theme-apply.
+ *
+ * libadwaita picks light or dark from the colour scheme (set by
+ * theme-apply) and exposes its palette as CSS variables, so pointing them at
+ * ours is enough. Plain GTK4 apps on built-in Adwaita follow
+ * gtk-application-prefer-dark-theme. */
+:root {
+  --accent-color: var(--primary);
+  --accent-bg-color: var(--secondary);
+  --accent-fg-color: var(--on-secondary);
+
+  --window-bg-color: var(--bg-opaque);
+  --window-fg-color: var(--fg);
+  --view-bg-color: var(--base);
+  --view-fg-color: var(--fg);
+  --headerbar-bg-color: var(--bg-opaque);
+  --headerbar-fg-color: var(--fg);
+  --headerbar-backdrop-color: var(--bg-opaque);
+  --sidebar-bg-color: var(--bg-opaque);
+  --sidebar-fg-color: var(--fg);
+  --sidebar-backdrop-color: var(--bg-opaque);
+  --secondary-sidebar-bg-color: var(--bg-opaque);
+  --secondary-sidebar-fg-color: var(--fg);
+  --popover-bg-color: var(--bg-opaque);
+  --popover-fg-color: var(--fg);
+  --dialog-bg-color: var(--bg-opaque);
+  --dialog-fg-color: var(--fg);
+  --card-bg-color: var(--base);
+  --card-fg-color: var(--fg);
+  --border-color: var(--muted);
+
+  --destructive-bg-color: var(--critical);
+  --error-bg-color: var(--critical);
+}
