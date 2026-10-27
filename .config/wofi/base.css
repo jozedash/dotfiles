@@ -1,0 +1,47 @@
+/* wofi's style, minus the colours. theme-apply writes style.css as the
+ * colour definitions (@primary, @bg_opaque, @fg, ...) followed by this file:
+ * wofi loads its style as data, so a relative @import wouldn't find them.
+ * Edit this file, then run ~/.config/theme/theme-apply. */
+
+window {
+margin: 0px;
+border: 2px solid @primary;
+background-color: alpha(@muted, 0.5);
+border-radius: 10;
+}
+
+#input {
+margin: 5px;
+border: none;
+color: @fg;
+background-color: alpha(@bg_opaque, 0.8);
+}
+
+#inner-box {
+margin: 5px;
+border: none;
+background-color: alpha(@bg_opaque, 0.8);
+}
+
+#outer-box {
+margin: 5px;
+border: none;
+background-color: alpha(@muted, 0.3);
+}
+
+#scroll {
+margin: 0px;
+border: none;
+}
+
+#text {
+margin: 5px;
+border: none;
+color: @fg;
+}
+
+#entry:selected {
+background-color: alpha(@bg_opaque, 0.7);
+border: solid 1px @fg;
+border-radius: 5px;
+}

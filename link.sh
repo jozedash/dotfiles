@@ -12,7 +12,7 @@
 # Paths relative to both the repo root and $HOME
 LINKS=(.bash_profile .config/hypr .config/waybar .config/wofi .config/fcitx5
     .config/swaync .config/udiskie .config/fontconfig .config/systemd/user
-    .local/share/fcitx5/themes/hypr)
+    .local/share/fcitx5/themes/hypr .config/theme)
 
 REPO=$(cd "$(dirname "$0")" && pwd)
 STAMP=$(date '+%Y-%m-%d_%H:%M:%S')
@@ -52,3 +52,7 @@ fi
 for LINK in "${LINKS[@]}"; do
     link "$REPO/$LINK" "$HOME/$LINK"
 done
+
+# Write the colour files the configs import (see .config/theme/theme-apply)
+"$REPO/.config/theme/theme-apply" --no-reload ||
+    echo "theme-apply failed: waybar, wofi and swaync will be missing their colours"

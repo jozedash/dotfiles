@@ -153,7 +153,7 @@ remove_old_packages() {
 }
 
 link_configs() {
-    chmod 755 ./.config/hypr/toggle_layout.sh ./link.sh ./usr/local/bin/* ./setup/*.sh
+    chmod 755 ./.config/hypr/toggle_layout.sh ./.config/theme/theme-apply ./link.sh ./usr/local/bin/* ./setup/*.sh
     # As the user, so they own the links
     sudo -H -u "$USER_NAME" ./link.sh
 }

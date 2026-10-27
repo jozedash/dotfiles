@@ -1,3 +1,8 @@
+/* Colours (@primary, @bg, @fg, ...) come from colors.css, which
+ * ~/.config/theme/theme-apply generates. Icons load through icons-current,
+ * which it points at icons/ or the recoloured icons-light/ to match the mode. */
+@import url("colors.css");
+
 * {
     border: none;
     font-size: 14px;
@@ -15,9 +20,9 @@ window#waybar {
   padding-left: 5px;
   border-radius: 15px 0 0 15px;
   margin-top: 2px;
-  background: rgba(63, 63, 63, 0.7);
-  color: rgb(216, 222, 233);
-  border: 2px solid rgba(255, 0, 255, 0.9);;
+  background: @bg;
+  color: @fg;
+  border: 2px solid alpha(@primary, 0.9);
   border-right: none;
 }
 
@@ -25,17 +30,17 @@ window#waybar {
   padding: 0 15px;
   margin-top: 2px;
   border-radius: 15px 15px 15px 15px;
-  background: rgba(63, 63, 63, 0.7);
-  color: rgb(216, 222, 233);
-  border: 2px solid rgba(255, 0, 255, 1.0);
+  background: @bg;
+  color: @fg;
+  border: 2px solid @primary;
 }
 
 .modules-left {
   border-radius: 0 15px 15px 0;
   margin-top: 2px;
-  background: rgba(63, 63, 63, 0.7);
-  color: rgb(216, 222, 233);
-  border: 2px solid rgba(255, 0, 255, 1.0);;
+  background: @bg;
+  color: @fg;
+  border: 2px solid @primary;
   border-left: none;
 }
 
@@ -91,81 +96,81 @@ window#waybar {
 }
 
 #custom-logo {
-  background-image: url("icons/arch.svg");
+  background-image: url("icons-current/arch.svg");
   background-position: center;
   padding: 0 10px 0 18px;
   margin-left: 6px;
 }
 
-#custom-weather      { background-image: url("icons/weather.svg"); }
-#disk                { background-image: url("icons/disk.svg"); }
-#memory              { background-image: url("icons/memory.svg"); }
-#cpu                 { background-image: url("icons/cpu.svg"); }
-#temperature         { background-image: url("icons/temperature.svg"); }
-#custom-clipboard    { background-image: url("icons/clipboard.svg"); }
-#custom-colorpicker  { background-image: url("icons/colorpicker.svg"); }
-#backlight           { background-image: url("icons/brightness.svg"); }
+#custom-weather      { background-image: url("icons-current/weather.svg"); }
+#disk                { background-image: url("icons-current/disk.svg"); }
+#memory              { background-image: url("icons-current/memory.svg"); }
+#cpu                 { background-image: url("icons-current/cpu.svg"); }
+#temperature         { background-image: url("icons-current/temperature.svg"); }
+#custom-clipboard    { background-image: url("icons-current/clipboard.svg"); }
+#custom-colorpicker  { background-image: url("icons-current/colorpicker.svg"); }
+#backlight           { background-image: url("icons-current/brightness.svg"); }
 
-#idle_inhibitor.activated   { background-image: url("icons/eye.svg"); }
-#idle_inhibitor.deactivated { background-image: url("icons/eye-off.svg"); }
+#idle_inhibitor.activated   { background-image: url("icons-current/eye.svg"); }
+#idle_inhibitor.deactivated { background-image: url("icons-current/eye-off.svg"); }
 
-#bluetooth                  { background-image: url("icons/bluetooth-on.svg"); }
+#bluetooth                  { background-image: url("icons-current/bluetooth-on.svg"); }
 #bluetooth.off,
-#bluetooth.disabled         { background-image: url("icons/bluetooth-off.svg"); }
-#bluetooth.connected        { background-image: url("icons/bluetooth-connected.svg"); }
+#bluetooth.disabled         { background-image: url("icons-current/bluetooth-off.svg"); }
+#bluetooth.connected        { background-image: url("icons-current/bluetooth-connected.svg"); }
 
-#pulseaudio.low             { background-image: url("icons/volume-low.svg"); }
-#pulseaudio.medium          { background-image: url("icons/volume-medium.svg"); }
-#pulseaudio.high            { background-image: url("icons/volume-high.svg"); }
-#pulseaudio.muted           { background-image: url("icons/volume-muted.svg"); }
+#pulseaudio.low             { background-image: url("icons-current/volume-low.svg"); }
+#pulseaudio.medium          { background-image: url("icons-current/volume-medium.svg"); }
+#pulseaudio.high            { background-image: url("icons-current/volume-high.svg"); }
+#pulseaudio.muted           { background-image: url("icons-current/volume-muted.svg"); }
 
-#network.wifi               { background-image: url("icons/wifi.svg"); }
-#network.ethernet           { background-image: url("icons/ethernet.svg"); }
+#network.wifi               { background-image: url("icons-current/wifi.svg"); }
+#network.ethernet           { background-image: url("icons-current/ethernet.svg"); }
 #network.linked,
 #network.disconnected,
-#network.disabled           { background-image: url("icons/disconnected.svg"); }
+#network.disabled           { background-image: url("icons-current/disconnected.svg"); }
 
 /* swaync's classes: notification / none, with dnd- and inhibited- variants */
 #custom-notification.none,
-#custom-notification.inhibited-none          { background-image: url("icons/bell.svg"); }
+#custom-notification.inhibited-none          { background-image: url("icons-current/bell.svg"); }
 #custom-notification.notification,
-#custom-notification.inhibited-notification  { background-image: url("icons/bell-badge.svg"); }
+#custom-notification.inhibited-notification  { background-image: url("icons-current/bell-badge.svg"); }
 #custom-notification.dnd-none,
 #custom-notification.dnd-notification,
 #custom-notification.dnd-inhibited-none,
-#custom-notification.dnd-inhibited-notification { background-image: url("icons/dnd.svg"); }
+#custom-notification.dnd-inhibited-notification { background-image: url("icons-current/dnd.svg"); }
 
-#custom-updates.updates     { background-image: url("icons/updates.svg"); }
-#custom-updates.reboot      { background-image: url("icons/reboot.svg"); }
-#custom-updates.pacnew      { background-image: url("icons/shield.svg"); }
+#custom-updates.updates     { background-image: url("icons-current/updates.svg"); }
+#custom-updates.reboot      { background-image: url("icons-current/reboot.svg"); }
+#custom-updates.pacnew      { background-image: url("icons-current/shield.svg"); }
 
-#custom-usb                 { background-image: url("icons/usb.svg"); }
+#custom-usb                 { background-image: url("icons-current/usb.svg"); }
 
 /* Battery: level rounded to 20%, plus charging and Long Life (leaf) variants */
-#custom-battery.level-0   { background-image: url("icons/battery-000.svg"); }
-#custom-battery.level-20  { background-image: url("icons/battery-020.svg"); }
-#custom-battery.level-40  { background-image: url("icons/battery-040.svg"); }
-#custom-battery.level-60  { background-image: url("icons/battery-060.svg"); }
-#custom-battery.level-80  { background-image: url("icons/battery-080.svg"); }
-#custom-battery.level-100 { background-image: url("icons/battery-100.svg"); }
-#custom-battery.level-0.charging   { background-image: url("icons/battery-000-charging.svg"); }
-#custom-battery.level-20.charging  { background-image: url("icons/battery-020-charging.svg"); }
-#custom-battery.level-40.charging  { background-image: url("icons/battery-040-charging.svg"); }
-#custom-battery.level-60.charging  { background-image: url("icons/battery-060-charging.svg"); }
-#custom-battery.level-80.charging  { background-image: url("icons/battery-080-charging.svg"); }
-#custom-battery.level-100.charging { background-image: url("icons/battery-100-charging.svg"); }
-#custom-battery.level-0.longlife   { background-image: url("icons/battery-000-longlife.svg"); }
-#custom-battery.level-20.longlife  { background-image: url("icons/battery-020-longlife.svg"); }
-#custom-battery.level-40.longlife  { background-image: url("icons/battery-040-longlife.svg"); }
-#custom-battery.level-60.longlife  { background-image: url("icons/battery-060-longlife.svg"); }
-#custom-battery.level-80.longlife  { background-image: url("icons/battery-080-longlife.svg"); }
-#custom-battery.level-100.longlife { background-image: url("icons/battery-100-longlife.svg"); }
-#custom-battery.level-0.charging.longlife   { background-image: url("icons/battery-000-charging-longlife.svg"); }
-#custom-battery.level-20.charging.longlife  { background-image: url("icons/battery-020-charging-longlife.svg"); }
-#custom-battery.level-40.charging.longlife  { background-image: url("icons/battery-040-charging-longlife.svg"); }
-#custom-battery.level-60.charging.longlife  { background-image: url("icons/battery-060-charging-longlife.svg"); }
-#custom-battery.level-80.charging.longlife  { background-image: url("icons/battery-080-charging-longlife.svg"); }
-#custom-battery.level-100.charging.longlife { background-image: url("icons/battery-100-charging-longlife.svg"); }
+#custom-battery.level-0   { background-image: url("icons-current/battery-000.svg"); }
+#custom-battery.level-20  { background-image: url("icons-current/battery-020.svg"); }
+#custom-battery.level-40  { background-image: url("icons-current/battery-040.svg"); }
+#custom-battery.level-60  { background-image: url("icons-current/battery-060.svg"); }
+#custom-battery.level-80  { background-image: url("icons-current/battery-080.svg"); }
+#custom-battery.level-100 { background-image: url("icons-current/battery-100.svg"); }
+#custom-battery.level-0.charging   { background-image: url("icons-current/battery-000-charging.svg"); }
+#custom-battery.level-20.charging  { background-image: url("icons-current/battery-020-charging.svg"); }
+#custom-battery.level-40.charging  { background-image: url("icons-current/battery-040-charging.svg"); }
+#custom-battery.level-60.charging  { background-image: url("icons-current/battery-060-charging.svg"); }
+#custom-battery.level-80.charging  { background-image: url("icons-current/battery-080-charging.svg"); }
+#custom-battery.level-100.charging { background-image: url("icons-current/battery-100-charging.svg"); }
+#custom-battery.level-0.longlife   { background-image: url("icons-current/battery-000-longlife.svg"); }
+#custom-battery.level-20.longlife  { background-image: url("icons-current/battery-020-longlife.svg"); }
+#custom-battery.level-40.longlife  { background-image: url("icons-current/battery-040-longlife.svg"); }
+#custom-battery.level-60.longlife  { background-image: url("icons-current/battery-060-longlife.svg"); }
+#custom-battery.level-80.longlife  { background-image: url("icons-current/battery-080-longlife.svg"); }
+#custom-battery.level-100.longlife { background-image: url("icons-current/battery-100-longlife.svg"); }
+#custom-battery.level-0.charging.longlife   { background-image: url("icons-current/battery-000-charging-longlife.svg"); }
+#custom-battery.level-20.charging.longlife  { background-image: url("icons-current/battery-020-charging-longlife.svg"); }
+#custom-battery.level-40.charging.longlife  { background-image: url("icons-current/battery-040-charging-longlife.svg"); }
+#custom-battery.level-60.charging.longlife  { background-image: url("icons-current/battery-060-charging-longlife.svg"); }
+#custom-battery.level-80.charging.longlife  { background-image: url("icons-current/battery-080-charging-longlife.svg"); }
+#custom-battery.level-100.charging.longlife { background-image: url("icons-current/battery-100-charging-longlife.svg"); }
 
 /* ---- Colours ---- */
 
@@ -175,7 +180,7 @@ window#waybar {
 }
 
 #clock{
-  color: rgba(255, 0, 255, 1.0);;
+  color: @primary;
 }
 
 #custom-battery.charging {
@@ -185,11 +190,11 @@ window#waybar {
 
 #custom-battery.warning {
     background-color: #ffbe61;
-    color: rgb(216, 222, 233);
+    color: @fg;
 }
 
 #custom-battery.critical {
-    background-color: #f53c3c;
+    background-color: @critical;
     color: #ffffff;
     animation-name: blink;
     animation-duration: 0.5s;
@@ -222,14 +227,14 @@ window#waybar {
     margin: 6px 0;
     font-size: 0;
     border-radius: 50%;
-    border: 2px solid rgb(216, 222, 233);
+    border: 2px solid @fg;
 }
 
 #workspaces button.active label {
-    background-color: rgb(216, 222, 233);
+    background-color: @fg;
 }
 
 #workspaces button:hover label {
-    border-color: rgba(255, 0, 255, 1.0);
+    border-color: @primary;
 }
 

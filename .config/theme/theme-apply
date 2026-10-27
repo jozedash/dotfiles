@@ -1,0 +1,175 @@
+#!/usr/bin/env python3
+"""Apply the theme: update the saved state from the flags, render every
+consumer's colours file from templates/, then tell running programs to reload.
+
+With no flags it re-renders from the saved state (link.sh does this).
+State: ~/.local/state/dotfiles-theme/state.json. Defaults: dark, magenta/purple.
+
+Adding a consumer: a template in templates/ using @name@ placeholders (names
+from theme.palette()), a line in TARGETS, and its reload command in RELOADS.
+"""
+
+import argparse
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+sys.dont_write_bytecode = True  # no __pycache__ in the repo
+import theme  # noqa: E402
+
+CONFIG = Path.home() / ".config"
+
+# (template, output, file appended after the rendered template or None).
+# Skipped when the output's directory doesn't exist, i.e. that config isn't
+# linked on this machine. wofi loads its style as data, so relative @imports
+# break there: its style.css is the colours followed by its base.css.
+TARGETS = [
+    ("gtk3-colors.css.in", CONFIG / "waybar/colors.css", None),
+    ("gtk3-colors.css.in", CONFIG / "wofi/style.css", CONFIG / "wofi/base.css"),
+    ("css-vars.css.in", CONFIG / "swaync/colors.css", None),
+]
+
+# (process name, command): run only while that process is running. wofi
+# reads its style on every launch, so it needs nothing.
+RELOADS = [
+    ("waybar", ["pkill", "-SIGUSR2", "-x", "waybar"]),
+    ("swaync", ["swaync-client", "-rs"]),
+]
+
+# Waybar's icons are drawn in the dark-mode text colour (setup/waybar-icons.sh)
+# and GTK3 CSS can't recolour background images, so light mode gets recoloured
+# copies. style.css loads them through the icons-current symlink.
+ICONS = CONFIG / "waybar/icons"
+ICON_COLOUR = theme.MODES["dark"]["fg"]
+
+PLACEHOLDER = re.compile(r"@(\w+)@")
+
+
+def render(template, values):
+    text = (HERE / "templates" / template).read_text()
+
+    def sub(m):
+        if m.group(1) not in values:
+            sys.exit(f"theme-apply: templates/{template} uses unknown @{m.group(1)}@")
+        return values[m.group(1)]
+
+    return PLACEHOLDER.sub(sub, text)
+
+
+def write_if_changed(path, text):
+    try:
+        if path.read_text() == text:
+            return
+    except OSError:
+        pass
+    theme.write_atomic(path, text)
+
+
+def update_icons(values):
+    if not ICONS.is_dir():
+        return
+    light = ICONS.with_name("icons-light")
+    light.mkdir(exist_ok=True)
+    for old in light.glob("*.svg"):
+        if not (ICONS / old.name).exists():
+            old.unlink()
+    for svg in ICONS.glob("*.svg"):
+        text = svg.read_text().replace(ICON_COLOUR, theme.MODES["light"]["fg"])
+        write_if_changed(light / svg.name, text)
+
+    target = "icons" if values["fg"] == ICON_COLOUR else "icons-light"
+    link = ICONS.with_name("icons-current")
+    if link.is_symlink() and str(link.readlink()) == target:
+        return
+    tmp = link.with_name(".icons-current.tmp")
+    tmp.unlink(missing_ok=True)
+    tmp.symlink_to(target)
+    tmp.replace(link)
+
+
+def reload():
+    for name, command in RELOADS:
+        if subprocess.run(["pgrep", "-x", name], capture_output=True).returncode != 0:
+            continue
+        if not shutil.which(command[0]):
+            continue
+        try:
+            subprocess.run(command, capture_output=True, timeout=5)
+        except subprocess.TimeoutExpired:
+            print(f"theme-apply: {' '.join(command)} timed out", file=sys.stderr)
+
+
+def update_state(args, state):
+    """Apply the flag (if any) to state. Returns an error message or None."""
+    current = state["pair"]
+    favourites = state["favourites"]
+    try:
+        if args.pair:
+            state["pair"] = theme.pair(*args.pair)
+        elif args.mode:
+            state["mode"] = args.mode
+        elif args.toggle_mode:
+            state["mode"] = "light" if state["mode"] == "dark" else "dark"
+        elif args.favourite:
+            if current in favourites:
+                return None
+            if len(favourites) >= theme.MAX_FAVOURITES:
+                return f"already {theme.MAX_FAVOURITES} favourites, unfavourite one first"
+            favourites.append(dict(current))
+        elif args.unfavourite is not None:
+            if len(args.unfavourite) not in (0, 2):
+                return "--unfavourite takes no colours (the current pair) or two"
+            target = theme.pair(*args.unfavourite) if args.unfavourite else current
+            if target in favourites:
+                favourites.remove(target)
+        elif args.cycle_favourite:
+            if not favourites:
+                return "no favourites to cycle through"
+            i = favourites.index(current) + 1 if current in favourites else 0
+            state["pair"] = dict(favourites[i % len(favourites)])
+    except ValueError as e:
+        return str(e)
+    return None
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    action = parser.add_mutually_exclusive_group()
+    action.add_argument("--pair", nargs=2, metavar=("PRIMARY", "SECONDARY"),
+                        help="set the accent pair, e.g. --pair '#ff00ff' '#8800ff'")
+    action.add_argument("--mode", choices=sorted(theme.MODES))
+    action.add_argument("--toggle-mode", action="store_true")
+    action.add_argument("--favourite", action="store_true",
+                        help=f"add the current pair to the favourites (max {theme.MAX_FAVOURITES})")
+    action.add_argument("--unfavourite", nargs="*", metavar="COLOUR",
+                        help="remove a pair from the favourites (default: the current one)")
+    action.add_argument("--cycle-favourite", action="store_true",
+                        help="switch to the next favourite pair")
+    parser.add_argument("--no-reload", action="store_true",
+                        help="only write the files, don't signal running programs")
+    args = parser.parse_args()
+
+    state = theme.load_state()
+    error = update_state(args, state)
+    if error:
+        sys.exit(f"theme-apply: {error}")
+    theme.save_state(state)
+
+    values = theme.palette(state)
+    for template, output, append in TARGETS:
+        if output.parent.is_dir():
+            text = render(template, values)
+            if append:
+                text += "\n" + append.read_text()
+            write_if_changed(output, text)
+    update_icons(values)
+    if not args.no_reload:
+        reload()
+
+
+if __name__ == "__main__":
+    main()

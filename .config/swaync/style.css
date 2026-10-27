@@ -1,30 +1,43 @@
 /* Matches the waybar style. Builds on swaync's default theme and only changes
- * colours, borders and corners. */
+ * colours, borders and corners. The colours (--primary, --bg, --fg, ...) come
+ * from colors.css, which ~/.config/theme/theme-apply generates. swaync is
+ * GTK4 and its default theme uses CSS variables, so @define-color does
+ * nothing here: override its variables instead. */
 @import url("file:///etc/xdg/swaync/style.css");
+@import url("colors.css");
 
-@define-color cc-bg rgba(63, 63, 63, 0.7);
-@define-color noti-bg rgba(63, 63, 63, 0.7);
-@define-color noti-bg-opaque rgb(63, 63, 63);
-@define-color noti-border-color #ff00ff;
-@define-color text-color #d8dee9;
-@define-color bg-selected #8800ff;
+/* swaync's own variables, see /etc/xdg/swaync/style.css */
+:root {
+  --cc-bg: var(--bg);
+  --noti-border-color: var(--primary);
+  --noti-bg: var(--bg-rgb);
+  --noti-bg-alpha: var(--bg-alpha);
+  --noti-bg-darker: var(--darker);
+  --noti-bg-hover: var(--hover);
+  --noti-bg-focus: var(--focus);
+  --noti-close-bg: var(--close-bg);
+  --noti-close-bg-hover: var(--close-bg-hover);
+  --text-color: var(--fg);
+  --text-color-disabled: var(--fg-disabled);
+  --bg-selected: var(--secondary);
+}
 
 .notification-row .notification-background .notification,
 .control-center,
 .floating-notifications .notification {
-  border: 2px solid #ff00ff;
+  border: 2px solid var(--primary);
   border-radius: 15px;
-  color: #d8dee9;
+  color: var(--fg);
 }
 
 .notification-row .notification-background .notification {
-  background: rgba(63, 63, 63, 0.7);
+  background: var(--bg);
 }
 
 .notification-row .notification-background .notification.critical {
-  border-color: #f53c3c;
+  border-color: var(--critical);
 }
 
 .control-center {
-  background: rgba(63, 63, 63, 0.7);
+  background: var(--bg);
 }
