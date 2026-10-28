@@ -13,4 +13,5 @@ plans/
 .config/hypr/colors.lua
 .config/hypr/colors.conf
 .config/hypr/wallpaper.conf
+.config/hypr/lock-logo.png
 .config/kitty/colors.conf

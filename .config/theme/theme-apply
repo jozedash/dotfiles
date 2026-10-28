@@ -50,6 +50,7 @@ TARGETS = [
     Target("css-vars.css.in", CONFIG / "swaync/colors.css"),
     Target("hypr-colors.lua.in", CONFIG / "hypr/colors.lua"),
     Target("hyprlock-colors.conf.in", CONFIG / "hypr/colors.conf"),
+    Target("hyprlock-logo.svg.in", CONFIG / "hypr/lock-logo.png"),
     Target("hyprpaper-wallpaper.conf.in", CONFIG / "hypr/wallpaper.conf"),
     Target("kitty-colors.conf.in", CONFIG / "kitty/colors.conf"),
     # fastfetch isn't linked (it has no config of its own); it reads this on every run
