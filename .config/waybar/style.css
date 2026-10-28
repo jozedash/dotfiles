@@ -71,7 +71,9 @@ window#waybar {
 
 /* ---- Icons ----
  * Each module draws its icon as a 16px background on the left, with the text
- * pushed right of it. Modules whose icon changes swap the image per class. */
+ * pushed right of it. Modules whose icon changes swap the image per class.
+ * Every module keeps 5px on both sides of its icon and text, so the gaps
+ * between them are even. */
 
 #custom-logo,
 #custom-battery,
@@ -94,11 +96,33 @@ window#waybar {
   background-repeat: no-repeat;
   background-position: left center;
   background-size: 16px;
-  padding-left: 22px;
+  background-position: 5px center;
+  padding-left: 27px;
+}
+
+/* Icon only: their text is a placeholder space, so centre the icon in place
+ * of the text instead of leaving the gap and the space after it */
+#custom-clipboard,
+#custom-theme,
+#custom-notification,
+#custom-updates.icon-only,
+#custom-usb.icon-only,
+#bluetooth.on,
+#bluetooth.off,
+#bluetooth.disabled,
+#network.ethernet,
+#network.linked,
+#network.disconnected,
+#network.disabled,
+#idle_inhibitor {
+  background-position: center;
+  padding: 0 5px;
+  min-width: 16px;
 }
 
 #custom-logo {
-  background-image: url("icons-current/arch.svg");
+  /* In the accent colour: theme-apply writes it from icons/arch.svg */
+  background-image: url("logo.svg");
   background-position: center;
   padding: 0 10px 0 18px;
   margin-left: 6px;

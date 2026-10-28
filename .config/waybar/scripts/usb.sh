@@ -9,6 +9,7 @@ COUNT=$(jq length <<< "$MOUNTS")
 
 TOOLTIP=$(jq -r '.[] | "\(.target | split("/") | last)  \(.size) \(.fstype)  (\(.source))"' <<< "$MOUNTS")
 TOOLTIP+=$'\n\nClick to browse, right-click to unmount all'
-[ "$COUNT" -gt 1 ] && TEXT=$COUNT || TEXT=" "
+CLASS=mounted
+[ "$COUNT" -gt 1 ] && TEXT=$COUNT || { TEXT=" "; CLASS+=" icon-only"; }
 
-jq -cn --arg text "$TEXT" --arg tooltip "$TOOLTIP" '{$text, $tooltip, class: "mounted"}'
+jq -cn --arg text "$TEXT" --arg tooltip "$TOOLTIP" --arg class "$CLASS" '{$text, $tooltip, class: ($class / " ")}'

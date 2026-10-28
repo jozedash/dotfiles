@@ -98,6 +98,8 @@ RELOADS = [
 # copies. style.css loads them through the icons-current symlink.
 ICONS = CONFIG / "waybar/icons"
 ICON_COLOUR = theme.MODES["dark"]["fg"]
+# The Arch logo is drawn in the accent instead, so it gets its own copy
+LOGO = CONFIG / "waybar/logo.svg"
 
 PLACEHOLDER = re.compile(r"@(\w+)@")
 
@@ -321,6 +323,8 @@ def apply(args):
     # exits) leaves the state and every file as they were
     values = theme.palette(state)
     outputs = [gtk3_theme(values)]  # first: settings.ini below needs its name
+    if ICONS.is_dir():  # before colors.css, whose change makes waybar reload its style
+        outputs.append((LOGO, (ICONS / "arch.svg").read_text().replace(ICON_COLOUR, values["primary"])))
     for target in TARGETS:
         if (target.needs or target.output.parent).is_dir():
             text = render(target.template, values)

@@ -18,6 +18,8 @@ put() { # name source
 s=symbolic
 put arch apps/distributor-logo-archlinux.svg
 sed -i '/<circle/d' "$OUT/arch.svg"
+# The logo only spans 3..13 x 2.3..12.3 of its canvas: crop to it so it's as big as the other icons
+sed -i 's/<svg /<svg viewBox="3 2.3 10 10" /' "$OUT/arch.svg"
 for l in 000 020 040 060 080 100; do
     put battery-$l panel/battery-$l.svg
     put battery-$l-charging panel/battery-$l-charging.svg

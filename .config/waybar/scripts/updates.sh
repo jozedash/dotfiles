@@ -41,7 +41,7 @@ fi
 if $REBOOT; then
     CLASS=reboot
     TEXT=${#UPDATES[@]}
-    [ "$TEXT" -gt 0 ] || TEXT=" "
+    [ "$TEXT" -gt 0 ] || { TEXT=" "; CLASS+=" icon-only"; }
 elif [ ${#UPDATES[@]} -gt 0 ]; then
     CLASS=updates
     TEXT=${#UPDATES[@]}
@@ -52,4 +52,4 @@ else
     exit 0
 fi
 
-jq -cn --arg text "$TEXT" --arg tooltip "$(echo -e "$TOOLTIP" | sed '/./,$!d')" --arg class "$CLASS" '{$text, $tooltip, $class}'
+jq -cn --arg text "$TEXT" --arg tooltip "$(echo -e "$TOOLTIP" | sed '/./,$!d')" --arg class "$CLASS" '{$text, $tooltip, class: ($class / " ")}'

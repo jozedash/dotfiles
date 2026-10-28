@@ -7,6 +7,7 @@ plans/
 .config/waybar/colors.css
 .config/waybar/icons-light/
 .config/waybar/icons-current
+.config/waybar/logo.svg
 .config/wofi/style.css
 .config/swaync/colors.css
 .config/hypr/colors.lua
